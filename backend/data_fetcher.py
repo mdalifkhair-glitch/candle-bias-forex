@@ -1,53 +1,51 @@
 """
-Data Fetcher - Yahoo Finance Integration (Fixed for Cloud)
-Fetches OHLC data for Forex pairs and precious metals
+Data Fetcher - Twelve Data API Integration
+Free tier: 800 API credits/day (enough for this app)
 """
 
 import requests
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import datetime
+from typing import Dict, List
 import json
 import os
 import time
 
-# Custom headers to avoid Yahoo Finance blocking
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'application/json',
-    'Accept-Language': 'en-US,en;q=0.9',
-}
+# Twelve Data API (Free tier - 800 credits/day)
+# Get your free API key at: https://twelvedata.com/
+API_KEY = os.getenv("TWELVEDATA_API_KEY", "demo")  # demo key has limited access
+BASE_URL = "https://api.twelvedata.com"
 
-# Yahoo Finance symbol mapping
+# Symbol mapping for Twelve Data
 SYMBOL_MAP = {
     # Major Forex Pairs
-    "EUR/USD": "EURUSD=X",
-    "GBP/USD": "GBPUSD=X",
-    "USD/JPY": "USDJPY=X",
-    "USD/CHF": "USDCHF=X",
-    "USD/CAD": "USDCAD=X",
-    "AUD/USD": "AUDUSD=X",
-    "NZD/USD": "NZDUSD=X",
-    # Precious Metals - using correct Yahoo symbols
-    "XAU/USD": "XAUUSD=X",
-    "XAU/JPY": "XAUJPY=X",
-    "XAU/GBP": "XAUGBP=X",
-    "XAG/USD": "XAGUSD=X",
+    "EUR/USD": "EUR/USD",
+    "GBP/USD": "GBP/USD",
+    "USD/JPY": "USD/JPY",
+    "USD/CHF": "USD/CHF",
+    "USD/CAD": "USD/CAD",
+    "AUD/USD": "AUD/USD",
+    "NZD/USD": "NZD/USD",
+    # Precious Metals
+    "XAU/USD": "XAU/USD",
+    "XAU/JPY": "XAU/JPY",
+    "XAU/GBP": "XAU/GBP",
+    "XAG/USD": "XAG/USD",
 }
 
 # Cache storage
 _cache: Dict[str, dict] = {}
-_cache_file = "/tmp/data_cache.json"  # Use /tmp for Render
+_cache_file = "/tmp/data_cache.json"
 
 
 def load_cache():
     """Load cache from file if exists"""
     global _cache
-    if os.path.exists(_cache_file):
-        try:
+    try:
+        if os.path.exists(_cache_file):
             with open(_cache_file, 'r') as f:
                 _cache = json.load(f)
-        except:
-            _cache = {}
+    except:
+        _cache = {}
 
 
 def save_cache():
@@ -59,20 +57,20 @@ def save_cache():
         pass
 
 
-def get_candles_direct(symbol: str, interval: str = "1d", range_period: str = "3mo") -> List[dict]:
+def get_candles_twelvedata(symbol: str, interval: str = "1day", outputsize: int = 5) -> List[dict]:
     """
-    Fetch OHLC data directly from Yahoo Finance API (bypassing yfinance library)
+    Fetch OHLC data from Twelve Data API
     """
     try:
-        # Yahoo Finance v8 API endpoint
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
-        
+        url = f"{BASE_URL}/time_series"
         params = {
+            "symbol": symbol,
             "interval": interval,
-            "range": range_period,
+            "outputsize": outputsize,
+            "apikey": API_KEY,
         }
         
-        response = requests.get(url, headers=HEADERS, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=15)
         
         if response.status_code != 200:
             print(f"Error fetching {symbol}: HTTP {response.status_code}")
@@ -80,39 +78,27 @@ def get_candles_direct(symbol: str, interval: str = "1d", range_period: str = "3
         
         data = response.json()
         
-        # Parse response
-        result = data.get("chart", {}).get("result", [])
-        if not result:
+        # Check for errors
+        if data.get("status") == "error":
+            print(f"API Error for {symbol}: {data.get('message', 'Unknown error')}")
+            return []
+        
+        values = data.get("values", [])
+        if not values:
             print(f"No data for {symbol}")
             return []
         
-        chart_data = result[0]
-        timestamps = chart_data.get("timestamp", [])
-        quote = chart_data.get("indicators", {}).get("quote", [{}])[0]
-        
-        opens = quote.get("open", [])
-        highs = quote.get("high", [])
-        lows = quote.get("low", [])
-        closes = quote.get("close", [])
-        
-        if not timestamps or not closes:
-            return []
-        
         candles = []
-        # Build candles from most recent to oldest
-        for i in range(len(timestamps) - 1, -1, -1):
-            if opens[i] is None or highs[i] is None or lows[i] is None or closes[i] is None:
-                continue
-                
+        for item in values:
             candles.append({
-                "open": float(opens[i]),
-                "high": float(highs[i]),
-                "low": float(lows[i]),
-                "close": float(closes[i]),
-                "date": datetime.fromtimestamp(timestamps[i]).strftime("%Y-%m-%d")
+                "open": float(item["open"]),
+                "high": float(item["high"]),
+                "low": float(item["low"]),
+                "close": float(item["close"]),
+                "date": item["datetime"].split()[0] if " " in item["datetime"] else item["datetime"]
             })
         
-        return candles
+        return candles  # Already sorted most recent first
         
     except Exception as e:
         print(f"Error fetching {symbol}: {e}")
@@ -123,43 +109,44 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
     """
     Get candles for a specific timeframe.
     """
-    yf_symbol = SYMBOL_MAP.get(display_symbol)
-    if not yf_symbol:
+    td_symbol = SYMBOL_MAP.get(display_symbol)
+    if not td_symbol:
         return []
     
-    # Map timeframe to Yahoo Finance parameters
+    # Map timeframe to Twelve Data intervals
     interval_map = {
-        "daily": ("1d", "3mo"),
-        "weekly": ("1wk", "1y"),
-        "monthly": ("1mo", "2y"),
+        "daily": "1day",
+        "weekly": "1week",
+        "monthly": "1month",
     }
     
-    interval, range_period = interval_map.get(timeframe, ("1d", "3mo"))
-    cache_key = f"{yf_symbol}_{timeframe}"
+    interval = interval_map.get(timeframe, "1day")
+    cache_key = f"{td_symbol}_{timeframe}"
     
     # Check cache
+    now = datetime.now()
     if cache_key in _cache:
         cached = _cache[cache_key]
-        cache_time = datetime.fromisoformat(cached.get("timestamp", "2000-01-01"))
-        now = datetime.now()
-        
-        # Cache validity
-        max_age = 3600 if timeframe == "daily" else 86400  # 1 hour for daily, 1 day for others
-        if (now - cache_time).total_seconds() < max_age:
-            return cached.get("candles", [])
+        try:
+            cache_time = datetime.fromisoformat(cached.get("timestamp", "2000-01-01"))
+            max_age = 3600 if timeframe == "daily" else 86400 * 7
+            if (now - cache_time).total_seconds() < max_age:
+                return cached.get("candles", [])
+        except:
+            pass
     
     # Fetch fresh data
-    candles = get_candles_direct(yf_symbol, interval, range_period)
+    candles = get_candles_twelvedata(td_symbol, interval, 5)
     
     if candles:
         _cache[cache_key] = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": now.isoformat(),
             "candles": candles
         }
         save_cache()
     
-    # Small delay to avoid rate limiting
-    time.sleep(0.3)
+    # Rate limiting - be nice to the API
+    time.sleep(0.5)
     
     return candles
 
