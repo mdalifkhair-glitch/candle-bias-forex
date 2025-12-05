@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Forex Candle Bias Dashboard - Multi-timeframe trend analysis">
+    <title>Candle Bias Dashboard | Forex</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">📊</span>
+                    <h1>CANDLE BIAS</h1>
+                </div>
+                <div class="header-actions">
+                    <span class="last-update" id="lastUpdate">--</span>
+                    <button class="refresh-btn" id="refreshBtn" title="Refresh Data">
+                        <span class="refresh-icon">↻</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot online" id="statusDot"></span>
+                <span id="statusText">Connecting...</span>
+            </div>
+            <div class="status-item">
+                <span class="pairs-count" id="pairsCount">0 pairs</span>
+            </div>
+        </div>
+
+        <!-- Dashboard Table -->
+        <main class="dashboard">
+            <div class="table-container">
+                <table class="bias-table">
+                    <thead>
+                        <tr>
+                            <th class="col-symbol">SYMBOL</th>
+                            <th class="col-bias">DAILY</th>
+                            <th class="col-bias">WEEKLY</th>
+                            <th class="col-bias">MONTHLY</th>
+                        </tr>
+                    </thead>
+                    <tbody id="biasTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                        <tr class="loading-row">
+                            <td colspan="4">
+                                <div class="loading-spinner"></div>
+                                <span>Loading data...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <!-- Legend -->
+        <footer class="legend">
+            <div class="legend-title">BIAS LEGEND</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span class="badge strong-bull">STRONG BULL</span>
+                    <span class="legend-desc">Close > Prev High</span>
+                </div>
+                <div class="legend-item">
+                    <span class="badge bull">BULL</span>
+                    <span class="legend-desc">Recovery from Low</span>
+                </div>
+                <div class="legend-item">
+                    <span class="badge neutral">NEUTRAL</span>
+                    <span class="legend-desc">Inside Bar</span>
+                </div>
+                <div class="legend-item">
+                    <span class="badge bear">BEAR</span>
+                    <span class="legend-desc">Rejection from High</span>
+                </div>
+                <div class="legend-item">
+                    <span class="badge strong-bear">STRONG BEAR</span>
+                    <span class="legend-desc">Close < Prev Low</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
