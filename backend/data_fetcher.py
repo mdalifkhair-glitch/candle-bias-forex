@@ -1,6 +1,7 @@
 """
-Data Fetcher - Twelve Data API Integration
-Free tier: 800 API credits/day (enough for this app)
+Data Fetcher - Alpha Vantage API Integration
+Free tier: 25 calls/day (free), 500/day with API key
+Get free key at: https://www.alphavantage.co/support/#api-key
 """
 
 import requests
@@ -10,26 +11,26 @@ import json
 import os
 import time
 
-# Twelve Data API (Free tier - 800 credits/day)
-# Get your free API key at: https://twelvedata.com/
-API_KEY = os.getenv("TWELVEDATA_API_KEY", "demo")  # demo key has limited access
-BASE_URL = "https://api.twelvedata.com"
+# Alpha Vantage API
+API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "demo")
+BASE_URL = "https://www.alphavantage.co/query"
 
-# Symbol mapping for Twelve Data
+# Symbol mapping for Alpha Vantage
+# Forex format: from_currency, to_currency
 SYMBOL_MAP = {
     # Major Forex Pairs
-    "EUR/USD": "EUR/USD",
-    "GBP/USD": "GBP/USD",
-    "USD/JPY": "USD/JPY",
-    "USD/CHF": "USD/CHF",
-    "USD/CAD": "USD/CAD",
-    "AUD/USD": "AUD/USD",
-    "NZD/USD": "NZD/USD",
+    "EUR/USD": ("EUR", "USD"),
+    "GBP/USD": ("GBP", "USD"),
+    "USD/JPY": ("USD", "JPY"),
+    "USD/CHF": ("USD", "CHF"),
+    "USD/CAD": ("USD", "CAD"),
+    "AUD/USD": ("AUD", "USD"),
+    "NZD/USD": ("NZD", "USD"),
     # Precious Metals
-    "XAU/USD": "XAU/USD",
-    "XAU/JPY": "XAU/JPY",
-    "XAU/GBP": "XAU/GBP",
-    "XAG/USD": "XAG/USD",
+    "XAU/USD": ("XAU", "USD"),
+    "XAU/JPY": ("XAU", "JPY"),
+    "XAU/GBP": ("XAU", "GBP"),
+    "XAG/USD": ("XAG", "USD"),
 }
 
 # Cache storage
@@ -57,51 +58,117 @@ def save_cache():
         pass
 
 
-def get_candles_twelvedata(symbol: str, interval: str = "1day", outputsize: int = 5) -> List[dict]:
+def get_forex_daily(from_currency: str, to_currency: str) -> List[dict]:
     """
-    Fetch OHLC data from Twelve Data API
+    Fetch daily Forex data from Alpha Vantage
     """
     try:
-        url = f"{BASE_URL}/time_series"
         params = {
-            "symbol": symbol,
-            "interval": interval,
-            "outputsize": outputsize,
+            "function": "FX_DAILY",
+            "from_symbol": from_currency,
+            "to_symbol": to_currency,
             "apikey": API_KEY,
+            "outputsize": "compact",  # Last 100 data points
         }
         
-        response = requests.get(url, params=params, timeout=15)
+        response = requests.get(BASE_URL, params=params, timeout=15)
         
         if response.status_code != 200:
-            print(f"Error fetching {symbol}: HTTP {response.status_code}")
+            print(f"Error: HTTP {response.status_code}")
             return []
         
         data = response.json()
         
         # Check for errors
-        if data.get("status") == "error":
-            print(f"API Error for {symbol}: {data.get('message', 'Unknown error')}")
+        if "Error Message" in data:
+            print(f"API Error: {data['Error Message']}")
             return []
         
-        values = data.get("values", [])
-        if not values:
-            print(f"No data for {symbol}")
+        if "Note" in data:
+            print(f"API Limit: {data['Note']}")
+            return []
+        
+        time_series = data.get("Time Series FX (Daily)", {})
+        if not time_series:
+            print(f"No data for {from_currency}/{to_currency}")
             return []
         
         candles = []
-        for item in values:
+        for date, values in sorted(time_series.items(), reverse=True)[:10]:
             candles.append({
-                "open": float(item["open"]),
-                "high": float(item["high"]),
-                "low": float(item["low"]),
-                "close": float(item["close"]),
-                "date": item["datetime"].split()[0] if " " in item["datetime"] else item["datetime"]
+                "open": float(values["1. open"]),
+                "high": float(values["2. high"]),
+                "low": float(values["3. low"]),
+                "close": float(values["4. close"]),
+                "date": date
             })
         
-        return candles  # Already sorted most recent first
+        return candles
         
     except Exception as e:
-        print(f"Error fetching {symbol}: {e}")
+        print(f"Error: {e}")
+        return []
+
+
+def get_forex_weekly(from_currency: str, to_currency: str) -> List[dict]:
+    """Fetch weekly Forex data"""
+    try:
+        params = {
+            "function": "FX_WEEKLY",
+            "from_symbol": from_currency,
+            "to_symbol": to_currency,
+            "apikey": API_KEY,
+        }
+        
+        response = requests.get(BASE_URL, params=params, timeout=15)
+        data = response.json()
+        
+        if "Error Message" in data or "Note" in data:
+            return []
+        
+        time_series = data.get("Time Series FX (Weekly)", {})
+        candles = []
+        for date, values in sorted(time_series.items(), reverse=True)[:10]:
+            candles.append({
+                "open": float(values["1. open"]),
+                "high": float(values["2. high"]),
+                "low": float(values["3. low"]),
+                "close": float(values["4. close"]),
+                "date": date
+            })
+        return candles
+    except:
+        return []
+
+
+def get_forex_monthly(from_currency: str, to_currency: str) -> List[dict]:
+    """Fetch monthly Forex data"""
+    try:
+        params = {
+            "function": "FX_MONTHLY",
+            "from_symbol": from_currency,
+            "to_symbol": to_currency,
+            "apikey": API_KEY,
+        }
+        
+        response = requests.get(BASE_URL, params=params, timeout=15)
+        data = response.json()
+        
+        if "Error Message" in data or "Note" in data:
+            return []
+        
+        time_series = data.get("Time Series FX (Monthly)", {})
+        candles = []
+        for date, values in sorted(time_series.items(), reverse=True)[:10]:
+            candles.append({
+                "open": float(values["1. open"]),
+                "high": float(values["2. high"]),
+                "low": float(values["3. low"]),
+                "close": float(values["4. close"]),
+                "date": date
+            })
+        return candles
+    except:
         return []
 
 
@@ -109,19 +176,12 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
     """
     Get candles for a specific timeframe.
     """
-    td_symbol = SYMBOL_MAP.get(display_symbol)
-    if not td_symbol:
+    currencies = SYMBOL_MAP.get(display_symbol)
+    if not currencies:
         return []
     
-    # Map timeframe to Twelve Data intervals
-    interval_map = {
-        "daily": "1day",
-        "weekly": "1week",
-        "monthly": "1month",
-    }
-    
-    interval = interval_map.get(timeframe, "1day")
-    cache_key = f"{td_symbol}_{timeframe}"
+    from_curr, to_curr = currencies
+    cache_key = f"{display_symbol}_{timeframe}"
     
     # Check cache
     now = datetime.now()
@@ -129,14 +189,21 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
         cached = _cache[cache_key]
         try:
             cache_time = datetime.fromisoformat(cached.get("timestamp", "2000-01-01"))
-            max_age = 3600 if timeframe == "daily" else 86400 * 7
-            if (now - cache_time).total_seconds() < max_age:
+            # Cache for 4 hours to save API calls
+            if (now - cache_time).total_seconds() < 14400:
                 return cached.get("candles", [])
         except:
             pass
     
-    # Fetch fresh data
-    candles = get_candles_twelvedata(td_symbol, interval, 5)
+    # Fetch based on timeframe
+    if timeframe == "daily":
+        candles = get_forex_daily(from_curr, to_curr)
+    elif timeframe == "weekly":
+        candles = get_forex_weekly(from_curr, to_curr)
+    elif timeframe == "monthly":
+        candles = get_forex_monthly(from_curr, to_curr)
+    else:
+        candles = []
     
     if candles:
         _cache[cache_key] = {
@@ -145,8 +212,8 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
         }
         save_cache()
     
-    # Rate limiting - be nice to the API
-    time.sleep(0.5)
+    # Rate limiting - Alpha Vantage allows 5 calls/minute on free tier
+    time.sleep(12)  # 12 seconds between calls = 5 per minute
     
     return candles
 
