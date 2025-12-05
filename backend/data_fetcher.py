@@ -12,8 +12,13 @@ import os
 import time
 
 # Twelve Data API
-API_KEY = os.getenv("TWELVEDATA_API_KEY", "demo")
 BASE_URL = "https://api.twelvedata.com"
+
+def get_api_key():
+    """Get API key from environment - called at runtime"""
+    key = os.environ.get("TWELVEDATA_API_KEY", "demo")
+    print(f"Using API key: {key[:8]}..." if len(key) > 8 else f"Using API key: {key}")
+    return key
 
 # Symbol mapping
 SYMBOL_MAP = {
@@ -59,7 +64,7 @@ def get_candles(symbol: str, interval: str = "1day", outputsize: int = 5) -> Lis
             "symbol": symbol,
             "interval": interval,
             "outputsize": outputsize,
-            "apikey": API_KEY,
+            "apikey": get_api_key(),
         }
         
         response = requests.get(f"{BASE_URL}/time_series", params=params, timeout=15)
