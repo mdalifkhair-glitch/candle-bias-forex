@@ -1,17 +1,23 @@
 """
-Data Fetcher - Yahoo Finance Integration
+Data Fetcher - Yahoo Finance Integration (Fixed for Cloud)
 Fetches OHLC data for Forex pairs and precious metals
 """
 
-import yfinance as yf
+import requests
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import json
 import os
+import time
+
+# Custom headers to avoid Yahoo Finance blocking
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/json',
+    'Accept-Language': 'en-US,en;q=0.9',
+}
 
 # Yahoo Finance symbol mapping
-# Forex pairs use format: EURUSD=X
-# Precious metals: GC=F (Gold futures), SI=F (Silver futures)
 SYMBOL_MAP = {
     # Major Forex Pairs
     "EUR/USD": "EURUSD=X",
@@ -21,16 +27,16 @@ SYMBOL_MAP = {
     "USD/CAD": "USDCAD=X",
     "AUD/USD": "AUDUSD=X",
     "NZD/USD": "NZDUSD=X",
-    # Precious Metals
-    "XAU/USD": "GC=F",      # Gold Futures (USD)
-    "XAU/JPY": "XAUJPY=X",  # Gold/JPY - may need alternative
-    "XAU/GBP": "XAUGBP=X",  # Gold/GBP - may need alternative
-    "XAG/USD": "SI=F",      # Silver Futures (USD)
+    # Precious Metals - using correct Yahoo symbols
+    "XAU/USD": "XAUUSD=X",
+    "XAU/JPY": "XAUJPY=X",
+    "XAU/GBP": "XAUGBP=X",
+    "XAG/USD": "XAGUSD=X",
 }
 
 # Cache storage
 _cache: Dict[str, dict] = {}
-_cache_file = "data_cache.json"
+_cache_file = "/tmp/data_cache.json"  # Use /tmp for Render
 
 
 def load_cache():
@@ -53,37 +59,61 @@ def save_cache():
         pass
 
 
-def get_candles(symbol: str, period: str = "1mo", interval: str = "1d") -> List[dict]:
+def get_candles_direct(symbol: str, interval: str = "1d", range_period: str = "3mo") -> List[dict]:
     """
-    Fetch OHLC candle data from Yahoo Finance.
-    
-    Args:
-        symbol: Yahoo Finance symbol (e.g., "EURUSD=X")
-        period: Data period (1mo, 3mo, 6mo, 1y, etc.)
-        interval: Candle interval (1d for daily, 1wk for weekly, 1mo for monthly)
-    
-    Returns:
-        List of candle dictionaries with open, high, low, close
+    Fetch OHLC data directly from Yahoo Finance API (bypassing yfinance library)
     """
     try:
-        ticker = yf.Ticker(symbol)
-        df = ticker.history(period=period, interval=interval)
+        # Yahoo Finance v8 API endpoint
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
         
-        if df.empty:
+        params = {
+            "interval": interval,
+            "range": range_period,
+        }
+        
+        response = requests.get(url, headers=HEADERS, params=params, timeout=10)
+        
+        if response.status_code != 200:
+            print(f"Error fetching {symbol}: HTTP {response.status_code}")
+            return []
+        
+        data = response.json()
+        
+        # Parse response
+        result = data.get("chart", {}).get("result", [])
+        if not result:
+            print(f"No data for {symbol}")
+            return []
+        
+        chart_data = result[0]
+        timestamps = chart_data.get("timestamp", [])
+        quote = chart_data.get("indicators", {}).get("quote", [{}])[0]
+        
+        opens = quote.get("open", [])
+        highs = quote.get("high", [])
+        lows = quote.get("low", [])
+        closes = quote.get("close", [])
+        
+        if not timestamps or not closes:
             return []
         
         candles = []
-        for idx in range(len(df) - 1, -1, -1):  # Most recent first
-            row = df.iloc[idx]
+        # Build candles from most recent to oldest
+        for i in range(len(timestamps) - 1, -1, -1):
+            if opens[i] is None or highs[i] is None or lows[i] is None or closes[i] is None:
+                continue
+                
             candles.append({
-                "open": float(row["Open"]),
-                "high": float(row["High"]),
-                "low": float(row["Low"]),
-                "close": float(row["Close"]),
-                "date": str(df.index[idx].date())
+                "open": float(opens[i]),
+                "high": float(highs[i]),
+                "low": float(lows[i]),
+                "close": float(closes[i]),
+                "date": datetime.fromtimestamp(timestamps[i]).strftime("%Y-%m-%d")
             })
         
         return candles
+        
     except Exception as e:
         print(f"Error fetching {symbol}: {e}")
         return []
@@ -92,45 +122,34 @@ def get_candles(symbol: str, period: str = "1mo", interval: str = "1d") -> List[
 def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
     """
     Get candles for a specific timeframe.
-    
-    Args:
-        display_symbol: Display symbol (e.g., "EUR/USD")
-        timeframe: "daily", "weekly", or "monthly"
-    
-    Returns:
-        List of candles (most recent first)
     """
     yf_symbol = SYMBOL_MAP.get(display_symbol)
     if not yf_symbol:
         return []
     
-    # Map timeframe to Yahoo Finance interval
+    # Map timeframe to Yahoo Finance parameters
     interval_map = {
-        "daily": ("3mo", "1d"),    # 3 months of daily data
-        "weekly": ("1y", "1wk"),   # 1 year of weekly data
-        "monthly": ("2y", "1mo"),  # 2 years of monthly data
+        "daily": ("1d", "3mo"),
+        "weekly": ("1wk", "1y"),
+        "monthly": ("1mo", "2y"),
     }
     
-    period, interval = interval_map.get(timeframe, ("3mo", "1d"))
-    
+    interval, range_period = interval_map.get(timeframe, ("1d", "3mo"))
     cache_key = f"{yf_symbol}_{timeframe}"
     
-    # Check cache (simple time-based)
+    # Check cache
     if cache_key in _cache:
         cached = _cache[cache_key]
         cache_time = datetime.fromisoformat(cached.get("timestamp", "2000-01-01"))
         now = datetime.now()
         
-        # Cache validity based on timeframe
-        if timeframe == "daily" and (now - cache_time).total_seconds() < 3600:  # 1 hour
-            return cached.get("candles", [])
-        elif timeframe == "weekly" and (now - cache_time).total_seconds() < 86400:  # 1 day
-            return cached.get("candles", [])
-        elif timeframe == "monthly" and (now - cache_time).total_seconds() < 86400 * 7:  # 1 week
+        # Cache validity
+        max_age = 3600 if timeframe == "daily" else 86400  # 1 hour for daily, 1 day for others
+        if (now - cache_time).total_seconds() < max_age:
             return cached.get("candles", [])
     
     # Fetch fresh data
-    candles = get_candles(yf_symbol, period, interval)
+    candles = get_candles_direct(yf_symbol, interval, range_period)
     
     if candles:
         _cache[cache_key] = {
@@ -138,6 +157,9 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
             "candles": candles
         }
         save_cache()
+    
+    # Small delay to avoid rate limiting
+    time.sleep(0.3)
     
     return candles
 
