@@ -61,7 +61,7 @@ html {
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
     background: linear-gradient(135deg, var(--bg-primary) 0%, #051225 100%);
     color: var(--text-primary);
     min-height: 100vh;
@@ -128,7 +128,7 @@ body {
 .last-update {
     font-size: 0.75rem;
     color: var(--text-muted);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Space Mono', monospace;
 }
 
 .refresh-btn {
@@ -225,7 +225,7 @@ body {
 }
 
 .pairs-count {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Space Mono', monospace;
     color: var(--gold);
 }
 
@@ -293,7 +293,7 @@ body {
 .bias-table td.symbol-cell {
     font-weight: 600;
     color: var(--text-primary);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Space Mono', monospace;
     font-size: 0.85rem;
 }
 
@@ -310,7 +310,7 @@ body {
     font-weight: 600;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Space Mono', monospace;
     white-space: nowrap;
 }
 
