@@ -9,40 +9,40 @@
     --bg-secondary: #0F2744;
     --bg-card: #142F4E;
     --bg-hover: #1A3A5C;
-    
+
     /* Accent Colors */
     --gold: #F5C542;
     --gold-light: #FFD966;
     --gold-dark: #D4A332;
-    
+
     /* Bias Colors */
     --strong-bull: #00FF7F;
     --bull: #32CD32;
     --neutral: #6B7280;
     --bear: #FF6B35;
     --strong-bear: #FF3B30;
-    
+
     /* Text Colors */
     --text-primary: #FFFFFF;
     --text-secondary: #A0AEC0;
     --text-muted: #718096;
-    
+
     /* Borders */
     --border-color: rgba(245, 197, 66, 0.2);
     --border-gold: rgba(245, 197, 66, 0.5);
-    
+
     /* Shadows */
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-    
+
     /* Spacing */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
-    
+
     /* Border Radius */
     --radius-sm: 6px;
     --radius-md: 10px;
@@ -112,6 +112,13 @@ body {
     text-shadow: 0 0 20px rgba(245, 197, 66, 0.3);
 }
 
+.logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
 .header-actions {
     display: flex;
     align-items: center;
@@ -158,8 +165,13 @@ body {
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Status Bar */
@@ -201,8 +213,15 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .pairs-count {
@@ -399,42 +418,42 @@ body {
     html {
         font-size: 14px;
     }
-    
+
     .container {
         padding: var(--spacing-sm);
     }
-    
+
     .header {
         padding: var(--spacing-md);
     }
-    
+
     .logo h1 {
         font-size: 1.1rem;
         letter-spacing: 1px;
     }
-    
+
     .logo-icon {
         font-size: 1.4rem;
     }
-    
+
     .bias-table th,
     .bias-table td {
         padding: var(--spacing-sm);
     }
-    
+
     .badge {
         font-size: 0.6rem;
         padding: 3px 6px;
     }
-    
+
     .legend-items {
         gap: var(--spacing-sm);
     }
-    
+
     .legend-item {
         flex-basis: 45%;
     }
-    
+
     .legend-desc {
         font-size: 0.6rem;
     }
@@ -445,16 +464,16 @@ body {
         flex-direction: column;
         gap: var(--spacing-sm);
     }
-    
+
     .header-actions {
         width: 100%;
         justify-content: space-between;
     }
-    
+
     .bias-table th.col-symbol {
         width: 25%;
     }
-    
+
     .bias-table th.col-bias {
         width: 25%;
     }
