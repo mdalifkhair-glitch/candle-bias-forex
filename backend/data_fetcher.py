@@ -100,13 +100,14 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
     interval = interval_map.get(timeframe, "1day")
     cache_key = f"{td_symbol}_{timeframe}"
     
-    # Check cache (4 hour validity)
+    # Check cache (24 hour validity to minimize API calls)
     now = datetime.now()
     if cache_key in _cache:
         cached = _cache[cache_key]
         try:
             cache_time = datetime.fromisoformat(cached.get("timestamp", "2000-01-01"))
-            if (now - cache_time).total_seconds() < 14400:
+            # Cache for 24 hours
+            if (now - cache_time).total_seconds() < 86400:
                 return cached.get("candles", [])
         except:
             pass
@@ -117,7 +118,8 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
         _cache[cache_key] = {"timestamp": now.isoformat(), "candles": candles}
         save_cache()
     
-    time.sleep(0.5)
+    # Rate limiting - Twelve Data free tier: 8 calls/minute
+    time.sleep(8)
     return candles
 
 
