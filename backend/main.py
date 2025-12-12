@@ -97,10 +97,15 @@ async def get_all_bias():
             "monthly": "NEUTRAL",
         }
         
+        # Try to fetch data, but don't block if it fails
         for timeframe in ["daily", "weekly", "monthly"]:
-            candles = data_fetcher.get_timeframe_candles(symbol, timeframe)
-            if candles and len(candles) >= 2:
-                bias_data[timeframe] = get_bias_from_candles(candles)
+            try:
+                candles = data_fetcher.get_timeframe_candles(symbol, timeframe)
+                if candles and len(candles) >= 2:
+                    bias_data[timeframe] = get_bias_from_candles(candles)
+            except Exception as e:
+                print(f"Error fetching {symbol} {timeframe}: {e}")
+                # Keep NEUTRAL as default
         
         results.append(bias_data)
     

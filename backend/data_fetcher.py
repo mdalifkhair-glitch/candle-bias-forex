@@ -104,7 +104,7 @@ def get_candles_alphavantage(from_symbol: str, to_symbol: str, function: str) ->
             "outputsize": "compact"  # Last 100 data points
         }
         
-        response = requests.get(BASE_URL, params=params, timeout=15)
+        response = requests.get(BASE_URL, params=params, timeout=10)
         data = response.json()
         
         # Check for errors
