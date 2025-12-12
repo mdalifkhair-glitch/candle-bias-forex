@@ -47,6 +47,19 @@ async def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/api/test")
+async def test_endpoint():
+    """Test endpoint with mock data to verify frontend works"""
+    return {
+        "data": [
+            {"symbol": "EUR/USD", "daily": "BULL", "weekly": "STRONG BULL", "monthly": "NEUTRAL"},
+            {"symbol": "GBP/USD", "daily": "BEAR", "weekly": "NEUTRAL", "monthly": "BULL"},
+            {"symbol": "USD/JPY", "daily": "NEUTRAL", "weekly": "BEAR", "monthly": "STRONG BEAR"},
+        ],
+        "count": 3
+    }
+
+
 @app.get("/api/symbols")
 async def get_symbols():
     """Get list of all tracked symbols"""
