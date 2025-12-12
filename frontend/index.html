@@ -25,6 +25,9 @@
                     <h1>MARKET BIAS PRO</h1>
                 </div>
                 <div class="header-actions">
+                    <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+                        <span id="themeIcon">🌙</span>
+                    </button>
                     <span class="last-update" id="lastUpdate">--</span>
                     <button class="refresh-btn" id="refreshBtn" title="Refresh Data">
                         <span class="refresh-icon">↻</span>
@@ -94,6 +97,40 @@
                 </div>
             </div>
         </footer>
+
+        <!-- Social Sharing -->
+        <div class="share-section">
+            <h3>Share Dashboard</h3>
+            <div class="share-buttons">
+                <button onclick="shareTwitter()" class="share-btn twitter">🐦 Twitter</button>
+                <button onclick="shareFacebook()" class="share-btn facebook">📘 Facebook</button>
+                <button onclick="shareWhatsApp()" class="share-btn whatsapp">💬 WhatsApp</button>
+                <button onclick="copyLink()" class="share-btn copy">🔗 Copy Link</button>
+            </div>
+        </div>
+
+        <!-- Donation Section -->
+        <div class="donation-section">
+            <h3>Support This Project</h3>
+            <div class="donation-buttons">
+                <a href="#" id="buyMeCoffeeLink" target="_blank" class="donation-btn coffee">
+                    ☕ Buy Me a Coffee
+                </a>
+                <a href="#" id="paypalLink" target="_blank" class="donation-btn paypal">
+                    💳 PayPal
+                </a>
+                <a href="#" id="toyyibpayLink" target="_blank" class="donation-btn toyyibpay">
+                    💰 toyyibpay
+                </a>
+            </div>
+        </div>
+
+        <!-- Feedback -->
+        <div class="feedback-section">
+            <a href="mailto:your@email.com?subject=Candle%20Bias%20Feedback" id="feedbackLink" class="feedback-btn">
+                📧 Send Feedback
+            </a>
+        </div>
     </div>
 
     <script src="/static/app.js"></script>

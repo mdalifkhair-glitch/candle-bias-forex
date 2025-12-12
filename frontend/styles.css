@@ -1,9 +1,11 @@
 /* ====================================
    Candle Bias Dashboard - Premium Styling
-   Navy Blue + Gold Theme
+   Dark/Light Theme Support
    ==================================== */
 
-:root {
+/* Dark Theme (Default) */
+:root,
+:root[data-theme="dark"] {
     /* Primary Colors */
     --bg-primary: #0A1D37;
     --bg-secondary: #0F2744;
@@ -49,6 +51,41 @@
     --radius-lg: 16px;
 }
 
+/* Light Theme */
+:root[data-theme="light"] {
+    /* Primary Colors */
+    --bg-primary: #F8FAFC;
+    --bg-secondary: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-hover: #F1F5F9;
+
+    /* Accent Colors */
+    --gold: #D4A332;
+    --gold-light: #F5C542;
+    --gold-dark: #B8892A;
+
+    /* Bias Colors - Adjusted for light background */
+    --strong-bull: #059669;
+    --bull: #10B981;
+    --neutral: #6B7280;
+    --bear: #DC2626;
+    --strong-bear: #991B1B;
+
+    /* Text Colors */
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+
+    /* Borders */
+    --border-color: rgba(15, 23, 42, 0.1);
+    --border-gold: rgba(212, 163, 50, 0.3);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
 /* Reset & Base */
 * {
     margin: 0;
@@ -66,6 +103,11 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     line-height: 1.5;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+:root[data-theme="light"] body {
+    background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
 }
 
 /* Container */
@@ -129,6 +171,26 @@ body {
     font-size: 0.75rem;
     color: var(--text-muted);
     font-family: 'Space Mono', monospace;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.05);
+    border-color: var(--gold);
 }
 
 .refresh-btn {
@@ -401,6 +463,141 @@ body {
     text-align: center;
 }
 
+/* Social Sharing Section */
+.share-section {
+    margin-top: var(--spacing-md);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+}
+
+.share-section h3 {
+    font-size: 0.9rem;
+    color: var(--gold);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.share-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.share-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    color: white;
+}
+
+.share-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.share-btn.twitter {
+    background: #1da1f2;
+}
+
+.share-btn.facebook {
+    background: #1877f2;
+}
+
+.share-btn.whatsapp {
+    background: #25d366;
+}
+
+.share-btn.copy {
+    background: var(--gold);
+    color: var(--bg-primary);
+}
+
+/* Donation Section */
+.donation-section {
+    margin-top: var(--spacing-md);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+}
+
+.donation-section h3 {
+    font-size: 0.9rem;
+    color: var(--gold);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.donation-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.donation-btn {
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    color: white;
+    display: inline-block;
+}
+
+.donation-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.donation-btn.coffee {
+    background: #FFDD00;
+    color: #000;
+}
+
+.donation-btn.paypal {
+    background: #0070BA;
+}
+
+.donation-btn.toyyibpay {
+    background: #00A651;
+}
+
+/* Feedback Section */
+.feedback-section {
+    margin-top: var(--spacing-md);
+    text-align: center;
+    padding-bottom: var(--spacing-lg);
+}
+
+.feedback-btn {
+    padding: 12px 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.feedback-btn:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+}
+
 /* Error State */
 .error-message {
     text-align: center;
@@ -456,6 +653,16 @@ body {
 
     .legend-desc {
         font-size: 0.6rem;
+    }
+
+    .share-buttons,
+    .donation-buttons {
+        flex-direction: column;
+    }
+
+    .share-btn,
+    .donation-btn {
+        width: 100%;
     }
 }
 

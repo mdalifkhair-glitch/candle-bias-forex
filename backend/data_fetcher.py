@@ -1,130 +1,173 @@
 """
-Data Fetcher - Twelve Data API Integration
-Free tier: 800 API credits/day
-Get free key at: https://twelvedata.com/
+Data Fetcher - TradingView tvDatafeed Integration
+Free, unlimited forex data from TradingView
 """
 
-import requests
+from tvDatafeed import TvDatafeed, Interval
 from datetime import datetime
 from typing import Dict, List
+import sqlite3
 import json
 import os
-import time
 
-# Twelve Data API
-BASE_URL = "https://api.twelvedata.com"
+# Initialize TradingView datafeed
+tv = TvDatafeed()
 
-def get_api_key():
-    """Get API key from environment - called at runtime"""
-    key = os.environ.get("TWELVEDATA_API_KEY", "demo")
-    print(f"Using API key: {key[:8]}..." if len(key) > 8 else f"Using API key: {key}")
-    return key
-
-# Symbol mapping
+# Symbol mapping: Your format → TradingView format
 SYMBOL_MAP = {
-    "EUR/USD": "EUR/USD",
-    "GBP/USD": "GBP/USD",
-    "USD/JPY": "USD/JPY",
-    "USD/CHF": "USD/CHF",
-    "USD/CAD": "USD/CAD",
-    "AUD/USD": "AUD/USD",
-    "NZD/USD": "NZD/USD",
-    "XAU/USD": "XAU/USD",
-    "XAU/JPY": "XAU/JPY",
-    "XAU/GBP": "XAU/GBP",
-    "XAG/USD": "XAG/USD",
+    "EUR/USD": {"symbol": "EURUSD", "exchange": "FX_IDC"},
+    "GBP/USD": {"symbol": "GBPUSD", "exchange": "FX_IDC"},
+    "USD/JPY": {"symbol": "USDJPY", "exchange": "FX_IDC"},
+    "USD/CHF": {"symbol": "USDCHF", "exchange": "FX_IDC"},
+    "USD/CAD": {"symbol": "USDCAD", "exchange": "FX_IDC"},
+    "AUD/USD": {"symbol": "AUDUSD", "exchange": "FX_IDC"},
+    "NZD/USD": {"symbol": "NZDUSD", "exchange": "FX_IDC"},
+    "XAU/USD": {"symbol": "XAUUSD", "exchange": "OANDA"},
+    "XAU/JPY": {"symbol": "XAUJPY", "exchange": "OANDA"},
+    "XAU/GBP": {"symbol": "XAUGBP", "exchange": "OANDA"},
+    "XAG/USD": {"symbol": "XAGUSD", "exchange": "OANDA"},
 }
 
-_cache: Dict[str, dict] = {}
-_cache_file = "/tmp/data_cache.json"
+# SQLite cache database
+DB_PATH = "/tmp/candle_cache.db"
 
+def init_db():
+    """Initialize SQLite database for caching"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS candle_cache (
+            cache_key TEXT PRIMARY KEY,
+            data TEXT NOT NULL,
+            timestamp TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
-def load_cache():
-    global _cache
+def get_from_cache(cache_key: str, max_age_hours: int = 24) -> List[dict]:
+    """Get data from cache if fresh enough"""
     try:
-        if os.path.exists(_cache_file):
-            with open(_cache_file, 'r') as f:
-                _cache = json.load(f)
-    except:
-        _cache = {}
-
-
-def save_cache():
-    try:
-        with open(_cache_file, 'w') as f:
-            json.dump(_cache, f)
-    except:
-        pass
-
-
-def get_candles(symbol: str, interval: str = "1day", outputsize: int = 5) -> List[dict]:
-    """Fetch OHLC data from Twelve Data"""
-    try:
-        params = {
-            "symbol": symbol,
-            "interval": interval,
-            "outputsize": outputsize,
-            "apikey": get_api_key(),
-        }
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT data, timestamp FROM candle_cache WHERE cache_key = ?',
+            (cache_key,)
+        )
+        result = cursor.fetchone()
+        conn.close()
         
-        response = requests.get(f"{BASE_URL}/time_series", params=params, timeout=15)
-        data = response.json()
+        if result:
+            data_json, timestamp_str = result
+            cache_time = datetime.fromisoformat(timestamp_str)
+            age_hours = (datetime.now() - cache_time).total_seconds() / 3600
+            
+            if age_hours < max_age_hours:
+                return json.loads(data_json)
+    except Exception as e:
+        print(f"Cache read error: {e}")
+    
+    return None
+
+def save_to_cache(cache_key: str, data: List[dict]):
+    """Save data to cache"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            'INSERT OR REPLACE INTO candle_cache (cache_key, data, timestamp) VALUES (?, ?, ?)',
+            (cache_key, json.dumps(data), datetime.now().isoformat())
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Cache write error: {e}")
+
+def get_candles(symbol: str, exchange: str, interval: Interval, n_bars: int = 5) -> List[dict]:
+    """Fetch OHLC data from TradingView"""
+    try:
+        df = tv.get_hist(
+            symbol=symbol,
+            exchange=exchange,
+            interval=interval,
+            n_bars=n_bars
+        )
         
-        if data.get("status") == "error":
-            print(f"Error for {symbol}: {data.get('message')}")
+        if df is None or df.empty:
+            print(f"No data returned for {symbol} on {exchange}")
             return []
         
-        values = data.get("values", [])
+        # Convert DataFrame to list of dicts
         candles = []
-        for item in values:
+        for idx, row in df.iterrows():
             candles.append({
-                "open": float(item["open"]),
-                "high": float(item["high"]),
-                "low": float(item["low"]),
-                "close": float(item["close"]),
-                "date": item["datetime"].split()[0]
+                "open": float(row['open']),
+                "high": float(row['high']),
+                "low": float(row['low']),
+                "close": float(row['close']),
+                "date": idx.strftime('%Y-%m-%d')
             })
+        
+        # Reverse to get most recent first
+        candles.reverse()
         return candles
         
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error fetching {symbol}: {e}")
         return []
-
 
 def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
-    td_symbol = SYMBOL_MAP.get(display_symbol)
-    if not td_symbol:
+    """Get candles for a specific timeframe with caching"""
+    
+    # Get TradingView symbol mapping
+    tv_mapping = SYMBOL_MAP.get(display_symbol)
+    if not tv_mapping:
+        print(f"Symbol not found: {display_symbol}")
         return []
     
-    interval_map = {"daily": "1day", "weekly": "1week", "monthly": "1month"}
-    interval = interval_map.get(timeframe, "1day")
-    cache_key = f"{td_symbol}_{timeframe}"
+    # Map timeframe to TradingView interval
+    interval_map = {
+        "daily": Interval.in_daily,
+        "weekly": Interval.in_weekly,
+        "monthly": Interval.in_1_month
+    }
+    interval = interval_map.get(timeframe, Interval.in_daily)
     
-    # Check cache (24 hour validity to minimize API calls)
-    now = datetime.now()
-    if cache_key in _cache:
-        cached = _cache[cache_key]
-        try:
-            cache_time = datetime.fromisoformat(cached.get("timestamp", "2000-01-01"))
-            # Cache for 24 hours
-            if (now - cache_time).total_seconds() < 86400:
-                return cached.get("candles", [])
-        except:
-            pass
+    # Cache key
+    cache_key = f"{display_symbol}_{timeframe}"
     
-    candles = get_candles(td_symbol, interval, 5)
+    # Cache duration based on timeframe
+    cache_hours = {
+        "daily": 24,    # Refresh daily data every 24 hours
+        "weekly": 168,  # Refresh weekly data every 7 days
+        "monthly": 720  # Refresh monthly data every 30 days
+    }
+    max_age = cache_hours.get(timeframe, 24)
     
+    # Try cache first
+    cached_data = get_from_cache(cache_key, max_age)
+    if cached_data:
+        print(f"Using cached data for {display_symbol} {timeframe}")
+        return cached_data
+    
+    # Fetch fresh data
+    print(f"Fetching fresh data for {display_symbol} {timeframe}")
+    candles = get_candles(
+        symbol=tv_mapping["symbol"],
+        exchange=tv_mapping["exchange"],
+        interval=interval,
+        n_bars=5
+    )
+    
+    # Cache the result
     if candles:
-        _cache[cache_key] = {"timestamp": now.isoformat(), "candles": candles}
-        save_cache()
+        save_to_cache(cache_key, candles)
     
-    # Rate limiting - Twelve Data free tier: 8 calls/minute
-    time.sleep(8)
     return candles
 
-
 def get_all_symbols() -> List[str]:
+    """Get list of all tracked symbols"""
     return list(SYMBOL_MAP.keys())
 
-
-load_cache()
+# Initialize database on module load
+init_db()

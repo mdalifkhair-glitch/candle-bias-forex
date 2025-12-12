@@ -31,6 +31,9 @@ async function init() {
     // Try to detect API URL
     detectApiUrl();
 
+    // Initialize theme
+    initTheme();
+
     // Add event listeners
     elements.refreshBtn.addEventListener('click', handleRefresh);
 
@@ -219,3 +222,81 @@ setInterval(updateLastUpdateTime, 60000);
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', init);
+// ====================================
+// Theme Toggle
+// ====================================
+
+function initTheme() {
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    
+    // Get saved theme or detect system preference
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+    
+    // Apply theme
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    updateThemeIcon(currentTheme);
+    
+    // Theme toggle event
+    themeToggle.addEventListener('click', () => {
+        const theme = document.documentElement.getAttribute('data-theme');
+        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    });
+}
+
+function updateThemeIcon(theme) {
+    const themeIcon = document.getElementById('themeIcon');
+    themeIcon.textContent = theme === 'dark' ? '??' : '??';
+}
+
+// ====================================
+// Social Sharing Functions
+// ====================================
+
+function shareTwitter() {
+    const text = 'Check out this Forex Bias Dashboard - Multi-timeframe trend analysis!';
+    const url = window.location.href;
+    window.open(
+        https://twitter.com/intent/tweet?text=&url=,
+        '_blank',
+        'width=550,height=420'
+    );
+}
+
+function shareFacebook() {
+    const url = window.location.href;
+    window.open(
+        https://www.facebook.com/sharer/sharer.php?u=,
+        '_blank',
+        'width=550,height=420'
+    );
+}
+
+function shareWhatsApp() {
+    const text = 'Check out this Forex Bias Dashboard: ' + window.location.href;
+    window.open(
+        https://wa.me/?text=,
+        '_blank'
+    );
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        // Show success feedback
+        const btn = event.target.closest('.share-btn');
+        const originalText = btn.textContent;
+        btn.textContent = '? Copied!';
+        btn.style.backgroundColor = '#10b981';
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.backgroundColor = '';
+        }, 2000);
+    }).catch(err => {
+        alert('Link: ' + window.location.href);
+    });
+}
