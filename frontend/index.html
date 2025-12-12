@@ -71,66 +71,61 @@
             </div>
         </main>
 
-        <!-- Legend -->
-        <footer class="legend">
-            <div class="legend-title">BIAS LEGEND</div>
-            <div class="legend-items">
-                <div class="legend-item">
-                    <span class="badge strong-bull">STRONG BULL</span>
-                    <span class="legend-desc">High Momentum Up</span>
+        <!-- Consolidated Footer -->
+        <footer class="footer">
+            <!-- Bias Legend -->
+            <div class="footer-section legend-section">
+                <h3>📊 Bias Legend</h3>
+                <div class="legend-grid">
+                    <div class="legend-item">
+                        <span class="badge strong-bull">STRONG BULL</span>
+                        <span class="legend-desc">High Momentum Up</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="badge bull">BULL</span>
+                        <span class="legend-desc">Momentum Up</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="badge neutral">NEUTRAL</span>
+                        <span class="legend-desc">Consolidation</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="badge bear">BEAR</span>
+                        <span class="legend-desc">Momentum Down</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="badge strong-bear">STRONG BEAR</span>
+                        <span class="legend-desc">High Momentum Down</span>
+                    </div>
                 </div>
-                <div class="legend-item">
-                    <span class="badge bull">BULL</span>
-                    <span class="legend-desc">Momentum Up</span>
+            </div>
+
+            <!-- Share & Support -->
+            <div class="footer-actions">
+                <div class="footer-section">
+                    <h3>🔗 Share</h3>
+                    <div class="action-buttons">
+                        <button onclick="shareTwitter()" class="action-btn twitter">🐦</button>
+                        <button onclick="shareFacebook()" class="action-btn facebook">📘</button>
+                        <button onclick="shareWhatsApp()" class="action-btn whatsapp">💬</button>
+                        <button onclick="copyLink()" class="action-btn copy">🔗</button>
+                    </div>
                 </div>
-                <div class="legend-item">
-                    <span class="badge neutral">NEUTRAL</span>
-                    <span class="legend-desc">Consolidation</span>
-                </div>
-                <div class="legend-item">
-                    <span class="badge bear">BEAR</span>
-                    <span class="legend-desc">Momentum Down</span>
-                </div>
-                <div class="legend-item">
-                    <span class="badge strong-bear">STRONG BEAR</span>
-                    <span class="legend-desc">High Momentum Down</span>
+
+                <div class="footer-section">
+                    <h3>💝 Support</h3>
+                    <div class="action-buttons">
+                        <a href="#" id="buyMeCoffeeLink" target="_blank" class="action-btn coffee"
+                            title="Buy Me a Coffee">☕</a>
+                        <a href="#" id="paypalLink" target="_blank" class="action-btn paypal" title="PayPal">💳</a>
+                        <a href="#" id="toyyibpayLink" target="_blank" class="action-btn toyyibpay"
+                            title="toyyibpay">💰</a>
+                        <a href="mailto:your@email.com?subject=Candle%20Bias%20Feedback" id="feedbackLink"
+                            class="action-btn feedback" title="Send Feedback">📧</a>
+                    </div>
                 </div>
             </div>
         </footer>
-
-        <!-- Social Sharing -->
-        <div class="share-section">
-            <h3>Share Dashboard</h3>
-            <div class="share-buttons">
-                <button onclick="shareTwitter()" class="share-btn twitter">🐦 Twitter</button>
-                <button onclick="shareFacebook()" class="share-btn facebook">📘 Facebook</button>
-                <button onclick="shareWhatsApp()" class="share-btn whatsapp">💬 WhatsApp</button>
-                <button onclick="copyLink()" class="share-btn copy">🔗 Copy Link</button>
-            </div>
-        </div>
-
-        <!-- Donation Section -->
-        <div class="donation-section">
-            <h3>Support This Project</h3>
-            <div class="donation-buttons">
-                <a href="#" id="buyMeCoffeeLink" target="_blank" class="donation-btn coffee">
-                    ☕ Buy Me a Coffee
-                </a>
-                <a href="#" id="paypalLink" target="_blank" class="donation-btn paypal">
-                    💳 PayPal
-                </a>
-                <a href="#" id="toyyibpayLink" target="_blank" class="donation-btn toyyibpay">
-                    💰 toyyibpay
-                </a>
-            </div>
-        </div>
-
-        <!-- Feedback -->
-        <div class="feedback-section">
-            <a href="mailto:your@email.com?subject=Candle%20Bias%20Feedback" id="feedbackLink" class="feedback-btn">
-                📧 Send Feedback
-            </a>
-        </div>
     </div>
 
     <script src="/static/app.js"></script>

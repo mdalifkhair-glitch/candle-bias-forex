@@ -420,189 +420,6 @@ body {
     height: 24px;
     border: 3px solid var(--border-color);
     border-top-color: var(--gold);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto var(--spacing-sm);
-}
-
-/* Legend */
-.legend {
-    margin-top: var(--spacing-md);
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    border: 1px solid var(--border-color);
-}
-
-.legend-title {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--gold);
-    letter-spacing: 2px;
-    margin-bottom: var(--spacing-md);
-    text-align: center;
-}
-
-.legend-items {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--spacing-md);
-}
-
-.legend-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xs);
-}
-
-.legend-desc {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    text-align: center;
-}
-
-/* Social Sharing Section */
-.share-section {
-    margin-top: var(--spacing-md);
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    border: 1px solid var(--border-color);
-}
-
-.share-section h3 {
-    font-size: 0.9rem;
-    color: var(--gold);
-    margin-bottom: var(--spacing-md);
-    text-align: center;
-    letter-spacing: 1px;
-}
-
-.share-buttons {
-    display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.share-btn {
-    padding: 10px 16px;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    color: white;
-}
-
-.share-btn:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
-}
-
-.share-btn.twitter {
-    background: #1da1f2;
-}
-
-.share-btn.facebook {
-    background: #1877f2;
-}
-
-.share-btn.whatsapp {
-    background: #25d366;
-}
-
-.share-btn.copy {
-    background: var(--gold);
-    color: var(--bg-primary);
-}
-
-/* Donation Section */
-.donation-section {
-    margin-top: var(--spacing-md);
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    border: 1px solid var(--border-color);
-}
-
-.donation-section h3 {
-    font-size: 0.9rem;
-    color: var(--gold);
-    margin-bottom: var(--spacing-md);
-    text-align: center;
-    letter-spacing: 1px;
-}
-
-.donation-buttons {
-    display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.donation-btn {
-    padding: 12px 20px;
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    color: white;
-    display: inline-block;
-}
-
-.donation-btn:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
-}
-
-.donation-btn.coffee {
-    background: #FFDD00;
-    color: #000;
-}
-
-.donation-btn.paypal {
-    background: #0070BA;
-}
-
-.donation-btn.toyyibpay {
-    background: #00A651;
-}
-
-/* Feedback Section */
-.feedback-section {
-    margin-top: var(--spacing-md);
-    text-align: center;
-    padding-bottom: var(--spacing-lg);
-}
-
-.feedback-btn {
-    padding: 12px 24px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    display: inline-block;
-}
-
-.feedback-btn:hover {
-    border-color: var(--gold);
-    transform: translateY(-2px);
-}
-
-/* Error State */
-.error-message {
-    text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--strong-bear);
 }
 
 .error-message .error-icon {
@@ -683,5 +500,117 @@ body {
 
     .bias-table th.col-bias {
         width: 25%;
+    }
+}/* Consolidated Footer */
+.footer {
+    margin-top: var(--spacing-lg);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.footer-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.footer-section:last-child {
+    margin-bottom: 0;
+}
+
+.footer-section h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gold);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+/* Legend Grid */
+.legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--spacing-md);
+    justify-items: center;
+}
+
+.legend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.legend-desc {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* Footer Actions (Share & Support) */
+.footer-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--border-color);
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-color: var(--gold);
+}
+
+.action-btn.twitter:hover { background: #1da1f2; border-color: #1da1f2; }
+.action-btn.facebook:hover { background: #1877f2; border-color: #1877f2; }
+.action-btn.whatsapp:hover { background: #25d366; border-color: #25d366; }
+.action-btn.copy:hover { background: var(--gold); border-color: var(--gold); color: var(--bg-primary); }
+.action-btn.coffee:hover { background: #FFDD00; border-color: #FFDD00; }
+.action-btn.paypal:hover { background: #0070BA; border-color: #0070BA; }
+.action-btn.toyyibpay:hover { background: #00A651; border-color: #00A651; }
+.action-btn.feedback:hover { background: var(--gold); border-color: var(--gold); color: var(--bg-primary); }
+
+/* Error State */
+.error-message {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--strong-bear);
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+    .footer-actions {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .legend-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
