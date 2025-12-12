@@ -8,6 +8,9 @@ def calculate_bias(c1_open: float, c1_high: float, c1_low: float, c1_close: floa
     """
     Calculate bias based on candle comparison.
     
+    C1 = Last closed candle (yesterday/last week/last month)
+    C2 = Candle before C1 (2 days ago/2 weeks ago/2 months ago)
+    
     Priority Order (first match wins):
     1. STRONG BULL: C1.Close > C2.High (clean breakout above)
     2. STRONG BEAR: C1.Close < C2.Low (clean breakdown below)
@@ -42,14 +45,20 @@ def calculate_bias(c1_open: float, c1_high: float, c1_low: float, c1_close: floa
 def get_bias_from_candles(candles: list) -> str:
     """
     Get bias from a list of candle data.
-    Expects at least 2 candles, most recent first.
+    Expects at least 3 candles, most recent first.
     Each candle should have: open, high, low, close
+    
+    C0 = Current candle (incomplete, skip this)
+    C1 = Last closed candle (yesterday/last week/last month)
+    C2 = Candle before C1
+    
+    We compare C1 vs C2 (ignore C0 as it's not complete yet)
     """
-    if len(candles) < 2:
+    if len(candles) < 3:
         return "NEUTRAL"
     
-    c1 = candles[0]  # Current (most recent closed) candle
-    c2 = candles[1]  # Previous candle
+    c1 = candles[1]  # C1: Last CLOSED candle
+    c2 = candles[2]  # C2: Candle before C1
     
     return calculate_bias(
         c1['open'], c1['high'], c1['low'], c1['close'],
