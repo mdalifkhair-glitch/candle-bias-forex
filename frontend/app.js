@@ -229,16 +229,16 @@ document.addEventListener('DOMContentLoaded', init);
 function initTheme() {
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
-    
+
     // Get saved theme or detect system preference
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
-    
+
     // Apply theme
     document.documentElement.setAttribute('data-theme', currentTheme);
     updateThemeIcon(currentTheme);
-    
+
     // Theme toggle event
     themeToggle.addEventListener('click', () => {
         const theme = document.documentElement.getAttribute('data-theme');
@@ -262,7 +262,7 @@ function shareTwitter() {
     const text = 'Check out this Forex Bias Dashboard - Multi-timeframe trend analysis!';
     const url = window.location.href;
     window.open(
-        https://twitter.com/intent/tweet?text=&url=,
+        `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
         '_blank',
         'width=550,height=420'
     );
@@ -271,7 +271,7 @@ function shareTwitter() {
 function shareFacebook() {
     const url = window.location.href;
     window.open(
-        https://www.facebook.com/sharer/sharer.php?u=,
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
         '_blank',
         'width=550,height=420'
     );
@@ -280,7 +280,7 @@ function shareFacebook() {
 function shareWhatsApp() {
     const text = 'Check out this Forex Bias Dashboard: ' + window.location.href;
     window.open(
-        https://wa.me/?text=,
+        `https://wa.me/?text=${encodeURIComponent(text)}`,
         '_blank'
     );
 }
