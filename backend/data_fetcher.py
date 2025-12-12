@@ -1,31 +1,38 @@
 """
-Data Fetcher - TradingView tvDatafeed Integration
-Free, unlimited forex data from TradingView
+Data Fetcher - Alpha Vantage API Integration
+Official, reliable forex data API
+Free tier: 25 API calls/day
+Get free key at: https://www.alphavantage.co/support/#api-key
 """
 
-from tvDatafeed import TvDatafeed, Interval
+import requests
 from datetime import datetime
 from typing import Dict, List
 import sqlite3
 import json
 import os
 
-# Initialize TradingView datafeed
-tv = TvDatafeed()
+# Alpha Vantage API
+BASE_URL = "https://www.alphavantage.co/query"
 
-# Symbol mapping: Your format → TradingView format
+def get_api_key():
+    """Get API key from environment variable"""
+    # Default demo key for testing (limited, get your own free key)
+    return os.environ.get("ALPHAVANTAGE_API_KEY", "demo")
+
+# Symbol mapping: Your format → Alpha Vantage format
 SYMBOL_MAP = {
-    "EUR/USD": {"symbol": "EURUSD", "exchange": "FX_IDC"},
-    "GBP/USD": {"symbol": "GBPUSD", "exchange": "FX_IDC"},
-    "USD/JPY": {"symbol": "USDJPY", "exchange": "FX_IDC"},
-    "USD/CHF": {"symbol": "USDCHF", "exchange": "FX_IDC"},
-    "USD/CAD": {"symbol": "USDCAD", "exchange": "FX_IDC"},
-    "AUD/USD": {"symbol": "AUDUSD", "exchange": "FX_IDC"},
-    "NZD/USD": {"symbol": "NZDUSD", "exchange": "FX_IDC"},
-    "XAU/USD": {"symbol": "XAUUSD", "exchange": "OANDA"},
-    "XAU/JPY": {"symbol": "XAUJPY", "exchange": "OANDA"},
-    "XAU/GBP": {"symbol": "XAUGBP", "exchange": "OANDA"},
-    "XAG/USD": {"symbol": "XAGUSD", "exchange": "OANDA"},
+    "EUR/USD": "EURUSD",
+    "GBP/USD": "GBPUSD",
+    "USD/JPY": "USDJPY",
+    "USD/CHF": "USDCHF",
+    "USD/CAD": "USDCAD",
+    "AUD/USD": "AUDUSD",
+    "NZD/USD": "NZDUSD",
+    "XAU/USD": "XAUUSD",  # Gold
+    "XAU/JPY": "XAUJPY",  # May not be available
+    "XAU/GBP": "XAUGBP",  # May not be available
+    "XAG/USD": "XAGUSD",  # Silver
 }
 
 # SQLite cache database
@@ -83,55 +90,81 @@ def save_to_cache(cache_key: str, data: List[dict]):
     except Exception as e:
         print(f"Cache write error: {e}")
 
-def get_candles(symbol: str, exchange: str, interval: Interval, n_bars: int = 5) -> List[dict]:
-    """Fetch OHLC data from TradingView"""
+def get_candles_alphavantage(from_symbol: str, to_symbol: str, function: str) -> List[dict]:
+    """
+    Fetch OHLC data from Alpha Vantage
+    function: FX_DAILY, FX_WEEKLY, FX_MONTHLY
+    """
     try:
-        df = tv.get_hist(
-            symbol=symbol,
-            exchange=exchange,
-            interval=interval,
-            n_bars=n_bars
-        )
+        params = {
+            "function": function,
+            "from_symbol": from_symbol,
+            "to_symbol": to_symbol,
+            "apikey": get_api_key(),
+            "outputsize": "compact"  # Last 100 data points
+        }
         
-        if df is None or df.empty:
-            print(f"No data returned for {symbol} on {exchange}")
+        response = requests.get(BASE_URL, params=params, timeout=15)
+        data = response.json()
+        
+        # Check for errors
+        if "Error Message" in data:
+            print(f"API Error: {data['Error Message']}")
             return []
         
-        # Convert DataFrame to list of dicts
+        if "Note" in data:
+            print(f"API Note: {data['Note']}")  # Rate limit message
+            return []
+        
+        # Get time series data
+        time_series_key = None
+        for key in data.keys():
+            if "Time Series" in key:
+                time_series_key = key
+                break
+        
+        if not time_series_key:
+            print(f"No time series data found for {from_symbol}/{to_symbol}")
+            return []
+        
+        time_series = data[time_series_key]
+        
+        # Convert to our format
         candles = []
-        for idx, row in df.iterrows():
+        for date_str, values in sorted(time_series.items(), reverse=True)[:5]:
             candles.append({
-                "open": float(row['open']),
-                "high": float(row['high']),
-                "low": float(row['low']),
-                "close": float(row['close']),
-                "date": idx.strftime('%Y-%m-%d')
+                "open": float(values["1. open"]),
+                "high": float(values["2. high"]),
+                "low": float(values["3. low"]),
+                "close": float(values["4. close"]),
+                "date": date_str
             })
         
-        # Reverse to get most recent first
-        candles.reverse()
         return candles
         
     except Exception as e:
-        print(f"Error fetching {symbol}: {e}")
+        print(f"Error fetching {from_symbol}/{to_symbol}: {e}")
         return []
 
 def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
     """Get candles for a specific timeframe with caching"""
     
-    # Get TradingView symbol mapping
-    tv_mapping = SYMBOL_MAP.get(display_symbol)
-    if not tv_mapping:
-        print(f"Symbol not found: {display_symbol}")
+    # Parse symbol (e.g., "EUR/USD" -> from="EUR", to="USD")
+    if "/" not in display_symbol:
+        print(f"Invalid symbol format: {display_symbol}")
         return []
     
-    # Map timeframe to TradingView interval
-    interval_map = {
-        "daily": Interval.in_daily,
-        "weekly": Interval.in_weekly,
-        "monthly": Interval.in_1_month
+    parts = display_symbol.split("/")
+    from_symbol = parts[0]
+    to_symbol = parts[1]
+    
+    # Map timeframe to Alpha Vantage function
+    function_map = {
+        "daily": "FX_DAILY",
+        "weekly": "FX_WEEKLY",
+        "monthly": "FX_MONTHLY"
     }
-    interval = interval_map.get(timeframe, Interval.in_daily)
+    function = function_map.get(timeframe, "FX_DAILY")
     
     # Cache key
     cache_key = f"{display_symbol}_{timeframe}"
@@ -152,12 +185,7 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
     
     # Fetch fresh data
     print(f"Fetching fresh data for {display_symbol} {timeframe}")
-    candles = get_candles(
-        symbol=tv_mapping["symbol"],
-        exchange=tv_mapping["exchange"],
-        interval=interval,
-        n_bars=5
-    )
+    candles = get_candles_alphavantage(from_symbol, to_symbol, function)
     
     # Cache the result
     if candles:
