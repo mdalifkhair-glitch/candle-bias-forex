@@ -135,7 +135,7 @@ function renderTable(data) {
     if (!data || data.length === 0) {
         elements.tableBody.innerHTML = `
             <tr>
-                <td colspan="4" class="error-message">
+                <td colspan="5" class="error-message">
                     <div class="error-icon">📭</div>
                     <div>No data available</div>
                 </td>
@@ -150,6 +150,7 @@ function renderTable(data) {
             <td class="bias-cell">${renderBadge(item.daily)}</td>
             <td class="bias-cell">${renderBadge(item.weekly)}</td>
             <td class="bias-cell">${renderBadge(item.monthly)}</td>
+            <td class="bias-cell">${renderSignalBadge(item.signal || 'WAIT')}</td>
         </tr>
     `).join('');
 
@@ -177,6 +178,24 @@ function getBiasClass(bias) {
         'STRONG BEAR': 'strong-bear',
     };
     return classMap[bias] || 'neutral';
+}
+
+/**
+ * Render a signal badge
+ */
+function renderSignalBadge(signal) {
+    let className = 'signal-wait';
+    let icon = '⏸️'; // Pause icon for WAIT
+
+    if (signal === 'BUY') {
+        className = 'signal-buy';
+        icon = '🟢';
+    } else if (signal === 'SELL') {
+        className = 'signal-sell';
+        icon = '🔴';
+    }
+
+    return `<span class="badge ${className}">${icon} ${signal}</span>`;
 }
 
 /**

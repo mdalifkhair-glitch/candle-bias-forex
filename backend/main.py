@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from typing import Dict, List
 import os
 import data_fetcher
-from bias_calculator import get_bias_from_candles
+from bias_calculator import get_bias_from_candles, calculate_trade_signal
 
 app = FastAPI(
     title="Candle Bias Forex API",
@@ -124,6 +124,13 @@ async def get_all_bias():
             except Exception as e:
                 print(f"Error fetching {symbol} {timeframe}: {e}")
                 # Keep NEUTRAL as default
+        
+        # Calculate Signal
+        bias_data["signal"] = calculate_trade_signal(
+            bias_data["daily"], 
+            bias_data["weekly"], 
+            bias_data["monthly"]
+        )
         
         results.append(bias_data)
     

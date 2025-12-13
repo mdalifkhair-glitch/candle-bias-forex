@@ -64,3 +64,32 @@ def get_bias_from_candles(candles: list) -> str:
         c1['open'], c1['high'], c1['low'], c1['close'],
         c2['open'], c2['high'], c2['low'], c2['close']
     )
+
+def calculate_trade_signal(daily: str, weekly: str, monthly: str) -> str:
+    """
+    Calculate trade signal based on bias alignment.
+    
+    BUY RULES:
+    - MN: MUST be STRONG BULL
+    - W1: STRONG BULL or BULL
+    - D1: STRONG BULL or BULL
+    
+    SELL RULES:
+    - MN: MUST be STRONG BEAR
+    - W1: STRONG BEAR or BEAR
+    - D1: STRONG BEAR or BEAR
+    """
+    
+    # Check BUY
+    if monthly == "STRONG BULL":
+        if weekly in ["STRONG BULL", "BULL"]:
+            if daily in ["STRONG BULL", "BULL"]:
+                return "BUY"
+                
+    # Check SELL
+    if monthly == "STRONG BEAR":
+        if weekly in ["STRONG BEAR", "BEAR"]:
+            if daily in ["STRONG BEAR", "BEAR"]:
+                return "SELL"
+                
+    return "WAIT"

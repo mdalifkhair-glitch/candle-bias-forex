@@ -393,17 +393,6 @@ body {
     background: rgba(107, 114, 128, 0.15);
     color: var(--neutral);
     border: 1px solid rgba(107, 114, 128, 0.3);
-}
-
-.badge.bear {
-    background: rgba(255, 107, 53, 0.15);
-    color: var(--bear);
-    border: 1px solid rgba(255, 107, 53, 0.3);
-}
-
-.badge.strong-bear {
-    background: rgba(255, 59, 48, 0.15);
-    color: var(--strong-bear);
     border: 1px solid rgba(255, 59, 48, 0.3);
     text-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
 }
@@ -501,7 +490,9 @@ body {
     .bias-table th.col-bias {
         width: 25%;
     }
-}/* Consolidated Footer */
+}
+
+/* Consolidated Footer */
 .footer {
     margin-top: var(--spacing-lg);
     background: var(--bg-card);
@@ -587,14 +578,47 @@ body {
     border-color: var(--gold);
 }
 
-.action-btn.twitter:hover { background: #1da1f2; border-color: #1da1f2; }
-.action-btn.facebook:hover { background: #1877f2; border-color: #1877f2; }
-.action-btn.whatsapp:hover { background: #25d366; border-color: #25d366; }
-.action-btn.copy:hover { background: var(--gold); border-color: var(--gold); color: var(--bg-primary); }
-.action-btn.coffee:hover { background: #FFDD00; border-color: #FFDD00; }
-.action-btn.paypal:hover { background: #0070BA; border-color: #0070BA; }
-.action-btn.toyyibpay:hover { background: #00A651; border-color: #00A651; }
-.action-btn.feedback:hover { background: var(--gold); border-color: var(--gold); color: var(--bg-primary); }
+.action-btn.twitter:hover {
+    background: #1da1f2;
+    border-color: #1da1f2;
+}
+
+.action-btn.facebook:hover {
+    background: #1877f2;
+    border-color: #1877f2;
+}
+
+.action-btn.whatsapp:hover {
+    background: #25d366;
+    border-color: #25d366;
+}
+
+.action-btn.copy:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--bg-primary);
+}
+
+.action-btn.coffee:hover {
+    background: #FFDD00;
+    border-color: #FFDD00;
+}
+
+.action-btn.paypal:hover {
+    background: #0070BA;
+    border-color: #0070BA;
+}
+
+.action-btn.toyyibpay:hover {
+    background: #00A651;
+    border-color: #00A651;
+}
+
+.action-btn.feedback:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--bg-primary);
+}
 
 /* Error State */
 .error-message {
@@ -609,7 +633,7 @@ body {
         grid-template-columns: 1fr;
         gap: var(--spacing-lg);
     }
-    
+
     .legend-grid {
         grid-template-columns: repeat(2, 1fr);
     }
