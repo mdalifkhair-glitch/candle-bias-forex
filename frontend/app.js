@@ -37,7 +37,10 @@ async function init() {
     // Add event listeners
     elements.refreshBtn.addEventListener('click', handleRefresh);
 
-    // Initial data fetch
+    // Initial load: Try cache first for instant load
+    loadFromCache();
+
+    // Then fetch fresh data
     await fetchBiasData();
 
     // Set up auto-refresh
@@ -74,16 +77,32 @@ async function fetchBiasData() {
 
     isLoading = true;
     elements.refreshBtn.classList.add('loading');
-    updateStatus('loading', 'Fetching data...');
+
+    // Only show full loading status if table is empty (no cache shown)
+    // Check if we have data rows (excluding loading row)
+    const hasData = elements.tableBody.querySelectorAll('tr').length > 1;
+
+    if (!hasData) {
+        updateStatus('loading', 'Fetching data...');
+    } else {
+        updateStatus('loading', 'Updating...');
+    }
 
     try {
-        const response = await fetch(`${CONFIG.API_URL}/api/bias`);
+        const apiUrl = `${CONFIG.API_URL}/api/bias`;
+        console.log('Fetching from:', apiUrl);
+
+        const response = await fetch(apiUrl);
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
 
         const data = await response.json();
+
+        // Save to cache for next visit
+        saveToCache(data);
+
         renderTable(data.data);
         updateStatus('online', 'Connected');
         elements.pairsCount.textContent = `${data.count} pairs`;
@@ -93,8 +112,16 @@ async function fetchBiasData() {
 
     } catch (error) {
         console.error('Error fetching data:', error);
-        updateStatus('error', 'Connection failed');
-        renderError(error.message);
+
+        // If we have cached data shown, keep it visible
+        if (elements.tableBody.querySelectorAll('tr').length > 1) {
+            console.log('Keeping cached data visible despite fetch error');
+            // Revert status to cached if we fail
+            loadFromCache();
+        } else {
+            updateStatus('error', 'Connection failed');
+            renderError(error.message);
+        }
     } finally {
         isLoading = false;
         elements.refreshBtn.classList.remove('loading');
@@ -288,15 +315,62 @@ function shareWhatsApp() {
 function copyLink() {
     navigator.clipboard.writeText(window.location.href).then(() => {
         // Show success feedback
-        const btn = event.target.closest('.share-btn');
-        const originalText = btn.textContent;
-        btn.textContent = '? Copied!';
-        btn.style.backgroundColor = '#10b981';
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.style.backgroundColor = '';
-        }, 2000);
+        const btn = document.querySelector('.action-btn.copy');
+        if (btn) {
+            const originalText = btn.textContent;
+            btn.textContent = '✅';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 2000);
+        }
     }).catch(err => {
-        alert('Link: ' + window.location.href);
+        console.error('Failed to copy: ', err);
     });
+}
+
+/**
+ * Load data from LocalStorage
+ */
+function loadFromCache() {
+    try {
+        const cachedData = localStorage.getItem('candleBiasData');
+        if (cachedData) {
+            const parsed = JSON.parse(cachedData);
+            // Check if data is from today (optional expiry check)
+            const cacheTime = new Date(parsed.timestamp);
+            const now = new Date();
+
+            // Allow cache up to 24 hours
+            const ageHours = (now - cacheTime) / (1000 * 60 * 60);
+
+            if (ageHours < 24) {
+                console.log('Loading from cache:', parsed.timestamp);
+                renderTable(parsed.data);
+                elements.pairsCount.textContent = `${parsed.count} pairs`;
+                updateStatus('online', 'Cached Data');
+                if (parsed.timestamp) {
+                    lastUpdateTime = new Date(parsed.timestamp);
+                    updateLastUpdateTime();
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Cache load error:', e);
+    }
+}
+
+/**
+ * Save data to LocalStorage
+ */
+function saveToCache(data) {
+    try {
+        const cacheObj = {
+            data: data.data,
+            count: data.count,
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('candleBiasData', JSON.stringify(cacheObj));
+    } catch (e) {
+        console.error('Cache save error:', e);
+    }
 }

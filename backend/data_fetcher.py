@@ -175,13 +175,37 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
         "weekly": 168,  # Refresh weekly data every 7 days
         "monthly": 720  # Refresh monthly data every 30 days
     }
-    max_age = cache_hours.get(timeframe, 24)
-    
     # Try cache first
-    cached_data = get_from_cache(cache_key, max_age)
+    cached_data = get_from_cache(cache_key, 24) # max_age param ignored for logic below
+    
     if cached_data:
-        print(f"Using cached data for {display_symbol} {timeframe}")
-        return cached_data
+        # Check against database timestamp
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('SELECT timestamp FROM candle_cache WHERE cache_key = ?', (cache_key,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            cache_time = datetime.fromisoformat(row[0])
+            now = datetime.now()
+            
+            is_valid = False
+            if timeframe == "daily":
+                # Valid if cached today (UTC)
+                is_valid = cache_time.date() == now.date()
+            elif timeframe == "weekly":
+                # Valid if cached this year and week
+                is_valid = (cache_time.isocalendar()[:2] == now.isocalendar()[:2])
+            elif timeframe == "monthly":
+                # Valid if cached this year and month
+                is_valid = (cache_time.year == now.year and cache_time.month == now.month)
+            
+            if is_valid:
+                print(f"Using cached data for {display_symbol} {timeframe} (Cached: {cache_time})")
+                return cached_data
+            else:
+                print(f"Cache expired for {display_symbol} {timeframe}. Fetching new data.")
     
     # Fetch fresh data
     print(f"Fetching fresh data for {display_symbol} {timeframe}")
