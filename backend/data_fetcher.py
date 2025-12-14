@@ -63,6 +63,10 @@ def get_timeframe_candles(display_symbol: str, timeframe: str) -> List[dict]:
             print(f"No data found for {display_symbol} ({yahoo_symbol})")
             return []
 
+        # LOGGING: Print the latest candle for debugging
+        latest = df.iloc[0]
+        print(f"[{display_symbol} {timeframe}] Date: {latest.name}, Close: {latest['Close']}")
+
         # Sort descending (newest first)
         df = df.sort_index(ascending=False)
         

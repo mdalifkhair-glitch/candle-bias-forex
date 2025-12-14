@@ -98,6 +98,21 @@ async def get_symbol_bias(symbol: str):
     return result
 
 
+@app.get("/api/debug/{symbol}")
+async def debug_symbol(symbol: str):
+    """
+    Debug endpoint to see raw candle data for a symbol
+    """
+    symbol = symbol.upper().replace("-", "/")
+    debug_data = {"symbol": symbol}
+    
+    for timeframe in ["daily", "weekly", "monthly"]:
+        candles = data_fetcher.get_timeframe_candles(symbol, timeframe)
+        debug_data[timeframe] = candles
+        
+    return debug_data
+
+
 @app.get("/api/bias")
 async def get_all_bias():
     """
