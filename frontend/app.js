@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Candle Bias Dashboard - Frontend JavaScript
  * Fetches bias data and renders the dashboard
  */
@@ -136,7 +136,7 @@ function renderTable(data) {
         elements.tableBody.innerHTML = `
             <tr>
                 <td colspan="5" class="error-message">
-                    <div class="error-icon">📭</div>
+                    <div class="error-icon">ðŸ“­</div>
                     <div>No data available</div>
                 </td>
             </tr>
@@ -185,14 +185,14 @@ function getBiasClass(bias) {
  */
 function renderSignalBadge(signal) {
     let className = 'signal-wait';
-    let icon = '⏸️'; // Pause icon for WAIT
+    let icon = 'â¸ï¸'; // Pause icon for WAIT
 
     if (signal === 'BUY') {
         className = 'signal-buy';
-        icon = '🟢';
+        icon = 'ðŸŸ¢';
     } else if (signal === 'SELL') {
         className = 'signal-sell';
-        icon = '🔴';
+        icon = 'ðŸ”´';
     }
 
     return `<span class="badge ${className}">${icon} ${signal}</span>`;
@@ -213,7 +213,7 @@ function renderError(message) {
     elements.tableBody.innerHTML = `
         <tr>
             <td colspan="4" class="error-message">
-                <div class="error-icon">⚠️</div>
+                <div class="error-icon">âš ï¸</div>
                 <div>Failed to load data</div>
                 <div style="font-size: 0.75rem; margin-top: 8px;">${escapeHtml(message)}</div>
                 <div style="font-size: 0.7rem; margin-top: 4px; color: #718096;">
@@ -301,95 +301,169 @@ function updateThemeIcon(theme) {
 }
 
 // ====================================
-// Social Sharing Functions
+// Win % Calculator Module
 // ====================================
 
-function shareTwitter() {
-    const text = 'Check out this Forex Bias Dashboard - Multi-timeframe trend analysis!';
-    const url = window.location.href;
-    window.open(
-        `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
-        '_blank',
-        'width=550,height=420'
-    );
-}
+const Calculator = {
+    defaults: {
+        'A+': 90,
+        'A': 80,
+        'A-': 70,
+        'B': 50
+    },
 
-function shareFacebook() {
-    const url = window.location.href;
-    window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-        '_blank',
-        'width=550,height=420'
-    );
-}
+    init() {
+        this.cacheDom();
+        this.bindEvents();
+        this.loadSettings();
+    },
 
-function shareWhatsApp() {
-    const text = 'Check out this Forex Bias Dashboard: ' + window.location.href;
-    window.open(
-        `https://wa.me/?text=${encodeURIComponent(text)}`,
-        '_blank'
-    );
-}
+    cacheDom() {
+        this.dom = {
+            mn1: document.getElementById('calcMn1'),
+            w1: document.getElementById('calcW1'),
+            d1: document.getElementById('calcD1'),
+            grade: document.getElementById('calcGrade'),
+            winRate: document.getElementById('calcWinRate'),
+            toggleBtn: document.getElementById('toggleSettingsBtn'),
+            settingsPanel: document.getElementById('calcSettings'),
+            saveBtn: document.getElementById('saveRatesBtn'),
+            inputs: {
+                'A+': document.getElementById('rateAPlus'),
+                'A': document.getElementById('rateA'),
+                'A-': document.getElementById('rateAMinus'),
+                'B': document.getElementById('rateB')
+            }
+        };
+    },
 
-function copyLink() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-        // Show success feedback
-        const btn = document.querySelector('.action-btn.copy');
-        if (btn) {
-            const originalText = btn.textContent;
-            btn.textContent = '✅';
-            setTimeout(() => {
-                btn.textContent = originalText;
-            }, 2000);
+    bindEvents() {
+        // Auto-calculate on change
+        ['mn1', 'w1', 'd1'].forEach(key => {
+            if (this.dom[key]) {
+                this.dom[key].addEventListener('change', () => this.calculate());
+            }
+        });
+
+        // Settings toggle
+        if (this.dom.toggleBtn) {
+            this.dom.toggleBtn.addEventListener('click', () => {
+                this.dom.settingsPanel.classList.toggle('hidden');
+                const isHidden = this.dom.settingsPanel.classList.contains('hidden');
+                this.dom.toggleBtn.textContent = isHidden ? 'âš™ï¸ Edit Rates' : 'âŒ Close';
+            });
         }
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-    });
-}
 
-/**
- * Load data from LocalStorage
- */
-function loadFromCache() {
-    try {
-        const cachedData = localStorage.getItem('candleBiasData');
-        if (cachedData) {
-            const parsed = JSON.parse(cachedData);
-            // Check if data is from today (optional expiry check)
-            const cacheTime = new Date(parsed.timestamp);
-            const now = new Date();
+        // Save settings
+        if (this.dom.saveBtn) {
+            this.dom.saveBtn.addEventListener('click', () => this.saveSettings());
+        }
+    },
 
-            // Allow cache up to 24 hours
-            const ageHours = (now - cacheTime) / (1000 * 60 * 60);
+    calculate() {
+        const mn1 = this.dom.mn1.value;
+        const w1 = this.dom.w1.value;
+        const d1 = this.dom.d1.value;
 
-            if (ageHours < 24) {
-                console.log('Loading from cache:', parsed.timestamp);
-                renderTable(parsed.data);
-                elements.pairsCount.textContent = `${parsed.count} pairs`;
-                updateStatus('online', 'Cached Data');
-                if (parsed.timestamp) {
-                    lastUpdateTime = new Date(parsed.timestamp);
-                    updateLastUpdateTime();
-                }
+        if (!mn1 || !w1 || !d1) {
+            this.updateUI('--', '--%');
+            return;
+        }
+
+        const grade = this.determineGrade(mn1, w1, d1);
+        const winRate = this.getWinRate(grade);
+
+        this.updateUI(grade, winRate ? `${winRate}%` : 'N/A');
+    },
+
+    determineGrade(mn1, w1, d1) {
+        // Normalize
+        const m = mn1.toUpperCase();
+        const w = w1.toUpperCase();
+        const d = d1.toUpperCase();
+
+        // Grade A+ Logic
+        if ((m === 'STRONG BULL' && w === 'STRONG BULL' && d === 'BULL') ||
+            (m === 'STRONG BEAR' && w === 'STRONG BEAR' && d === 'BEAR')) {
+            return 'A+';
+        }
+
+        // Grade A Logic
+        if ((m === 'STRONG BULL' && w === 'BULL' && d === 'BULL') ||
+            (m === 'STRONG BEAR' && w === 'BEAR' && d === 'BEAR')) {
+            return 'A';
+        }
+
+        // Grade A- Logic
+        if ((m === 'BULL' && w === 'STRONG BULL' && d === 'BULL') ||
+            (m === 'BEAR' && w === 'STRONG BEAR' && d === 'BEAR')) {
+            return 'A-';
+        }
+
+        return 'B'; // Default/No Match
+    },
+
+    getWinRate(grade) {
+        // Try localStorage first
+        const savedRates = this.getStoredRates();
+        return savedRates[grade] || this.defaults[grade] || 0;
+    },
+
+    getStoredRates() {
+        try {
+            return JSON.parse(localStorage.getItem('calcWinRates')) || {};
+        } catch {
+            return {};
+        }
+    },
+
+    updateUI(grade, winRate) {
+        this.dom.grade.textContent = grade;
+        this.dom.winRate.textContent = winRate;
+
+        // Color coding
+        this.dom.grade.className = 'grade-badge'; // reset
+        if (grade.startsWith('A')) this.dom.grade.classList.add('grade-a');
+        else if (grade === 'B') this.dom.grade.classList.add('grade-b');
+    },
+
+    loadSettings() {
+        const rates = { ...this.defaults, ...this.getStoredRates() };
+
+        // Populate inputs
+        for (const [grade, value] of Object.entries(rates)) {
+            if (this.dom.inputs[grade]) {
+                this.dom.inputs[grade].value = value;
             }
         }
-    } catch (e) {
-        console.error('Cache load error:', e);
-    }
-}
+    },
 
-/**
- * Save data to LocalStorage
- */
-function saveToCache(data) {
-    try {
-        const cacheObj = {
-            data: data.data,
-            count: data.count,
-            timestamp: new Date().toISOString()
+    saveSettings() {
+        const newRates = {
+            'A+': this.dom.inputs['A+'].value,
+            'A': this.dom.inputs['A'].value,
+            'A-': this.dom.inputs['A-'].value,
+            'B': this.dom.inputs['B'].value
         };
-        localStorage.setItem('candleBiasData', JSON.stringify(cacheObj));
-    } catch (e) {
-        console.error('Cache save error:', e);
+
+        localStorage.setItem('calcWinRates', JSON.stringify(newRates));
+
+        // Visual feedback
+        const originalText = this.dom.saveBtn.textContent;
+        this.dom.saveBtn.textContent = 'âœ… Saved!';
+        setTimeout(() => {
+            this.dom.saveBtn.textContent = originalText;
+            this.dom.settingsPanel.classList.add('hidden');
+            this.dom.toggleBtn.textContent = 'âš™ï¸ Edit Rates';
+        }, 1000);
+
+        // Recalculate to show new values immediately
+        this.calculate();
     }
-}
+};
+
+// Initialize Calculator when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    Calculator.init();
+});
+
