@@ -1,13 +1,15 @@
 ﻿/**
- * Candle Bias Dashboard - Frontend JavaScript
- * Fetches bias data and renders the dashboard
+ * Candle Bias Dashboard - Frontend JavaScript (FIXED)
+ * Missing functions added: cache, share, and signal styling
  */
 
 // Configuration
 const CONFIG = {
-    // API_URL: 'http://localhost:8000', // Local development
-    API_URL: '', // Will be set dynamically or use relative path for deployed version
-    REFRESH_INTERVAL: 60000, // 1 minute auto-refresh (for display updates)
+    API_URL: '',
+    REFRESH_INTERVAL: 60000,
+    CACHE_KEY: 'biasData',
+    CACHE_TIMESTAMP_KEY: 'biasDataTimestamp',
+    CACHE_EXPIRY: 300000 // 5 minutes
 };
 
 // State
@@ -28,22 +30,17 @@ const elements = {
  * Initialize the dashboard
  */
 async function init() {
-    // Try to detect API URL
     detectApiUrl();
-
-    // Initialize theme
     initTheme();
-
-    // Add event listeners
     elements.refreshBtn.addEventListener('click', handleRefresh);
-
-    // Initial load: Try cache first for instant load
+    
+    // Load cache first for instant display
     loadFromCache();
-
-    // Then fetch fresh data
+    
+    // Fetch fresh data
     await fetchBiasData();
-
-    // Set up auto-refresh
+    
+    // Auto-refresh
     setInterval(fetchBiasData, CONFIG.REFRESH_INTERVAL);
 }
 
@@ -51,13 +48,10 @@ async function init() {
  * Detect API URL based on environment
  */
 function detectApiUrl() {
-    // When deployed on Render, API is on same origin
-    // When running locally via file://, use localhost
     if (window.location.protocol === 'file:') {
         CONFIG.API_URL = 'http://localhost:8000';
     } else {
-        // For deployed version (Render), API is same origin
-        CONFIG.API_URL = '';  // Empty = same origin
+        CONFIG.API_URL = '';
     }
 }
 
@@ -78,8 +72,6 @@ async function fetchBiasData() {
     isLoading = true;
     elements.refreshBtn.classList.add('loading');
 
-    // Only show full loading status if table is empty (no cache shown)
-    // Check if we have data rows (excluding loading row)
     const hasData = elements.tableBody.querySelectorAll('tr').length > 1;
 
     if (!hasData) {
@@ -100,7 +92,7 @@ async function fetchBiasData() {
 
         const data = await response.json();
 
-        // Save to cache for next visit
+        // Save to cache
         saveToCache(data);
 
         renderTable(data.data);
@@ -113,11 +105,9 @@ async function fetchBiasData() {
     } catch (error) {
         console.error('Error fetching data:', error);
 
-        // If we have cached data shown, keep it visible
         if (elements.tableBody.querySelectorAll('tr').length > 1) {
-            console.log('Keeping cached data visible despite fetch error');
-            // Revert status to cached if we fail
-            loadFromCache();
+            console.log('Keeping cached data visible');
+            updateStatus('cached', 'Using cached data');
         } else {
             updateStatus('error', 'Connection failed');
             renderError(error.message);
@@ -129,14 +119,61 @@ async function fetchBiasData() {
 }
 
 /**
- * Render the bias table
+ * Save data to localStorage cache
+ */
+function saveToCache(data) {
+    try {
+        localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(CONFIG.CACHE_TIMESTAMP_KEY, Date.now().toString());
+        console.log('Data cached successfully');
+    } catch (error) {
+        console.error('Cache save failed:', error);
+    }
+}
+
+/**
+ * Load data from localStorage cache
+ */
+function loadFromCache() {
+    try {
+        const cachedData = localStorage.getItem(CONFIG.CACHE_KEY);
+        const cacheTimestamp = localStorage.getItem(CONFIG.CACHE_TIMESTAMP_KEY);
+        
+        if (!cachedData || !cacheTimestamp) {
+            console.log('No cache available');
+            return;
+        }
+
+        const age = Date.now() - parseInt(cacheTimestamp);
+        const data = JSON.parse(cachedData);
+
+        if (age > CONFIG.CACHE_EXPIRY) {
+            console.log('Cache expired');
+            return;
+        }
+
+        console.log('Loading from cache');
+        renderTable(data.data);
+        updateStatus('cached', 'Cached data');
+        elements.pairsCount.textContent = `${data.count} pairs`;
+        
+        lastUpdateTime = new Date(parseInt(cacheTimestamp));
+        updateLastUpdateTime();
+
+    } catch (error) {
+        console.error('Cache load failed:', error);
+    }
+}
+
+/**
+ * Render the bias table with signal styling
  */
 function renderTable(data) {
     if (!data || data.length === 0) {
         elements.tableBody.innerHTML = `
             <tr>
                 <td colspan="5" class="error-message">
-                    <div class="error-icon">ðŸ“­</div>
+                    <div class="error-icon">🔭</div>
                     <div>No data available</div>
                 </td>
             </tr>
@@ -144,17 +181,34 @@ function renderTable(data) {
         return;
     }
 
-    const rows = data.map(item => `
-        <tr>
-            <td class="symbol-cell">${escapeHtml(item.symbol)}</td>
-            <td class="bias-cell">${renderBadge(item.daily)}</td>
-            <td class="bias-cell">${renderBadge(item.weekly)}</td>
-            <td class="bias-cell">${renderBadge(item.monthly)}</td>
-            <td class="bias-cell">${renderSignalBadge(item.signal || 'WAIT')}</td>
-        </tr>
-    `).join('');
+    const rows = data.map(item => {
+        const signal = item.signal || 'WAIT';
+        const rowClass = getSignalRowClass(signal);
+        
+        return `
+            <tr class="${rowClass}">
+                <td class="symbol-cell">${escapeHtml(item.symbol)}</td>
+                <td class="bias-cell">${renderBadge(item.daily)}</td>
+                <td class="bias-cell">${renderBadge(item.weekly)}</td>
+                <td class="bias-cell">${renderBadge(item.monthly)}</td>
+                <td class="bias-cell">${renderSignalBadge(signal)}</td>
+            </tr>
+        `;
+    }).join('');
 
     elements.tableBody.innerHTML = rows;
+}
+
+/**
+ * Get CSS class for signal row styling
+ */
+function getSignalRowClass(signal) {
+    const classMap = {
+        'BUY': 'signal-buy-row',
+        'SELL': 'signal-sell-row',
+        'WAIT': 'signal-wait-row'
+    };
+    return classMap[signal] || 'signal-wait-row';
 }
 
 /**
@@ -185,24 +239,23 @@ function getBiasClass(bias) {
  */
 function renderSignalBadge(signal) {
     let className = 'signal-wait';
-    let icon = 'â¸ï¸'; // Pause icon for WAIT
+    let icon = '⏸️';
 
     if (signal === 'BUY') {
         className = 'signal-buy';
-        icon = 'ðŸŸ¢';
+        icon = '🟢';
     } else if (signal === 'SELL') {
         className = 'signal-sell';
-        icon = 'ðŸ”´';
+        icon = '🔴';
     }
 
     return `<span class="badge ${className}">${icon} ${signal}</span>`;
 }
 
 /**
- * Format bias text for display (shorter on mobile)
+ * Format bias text for display
  */
 function formatBiasText(bias) {
-    // Could shorten on mobile if needed
     return bias || 'NEUTRAL';
 }
 
@@ -212,8 +265,8 @@ function formatBiasText(bias) {
 function renderError(message) {
     elements.tableBody.innerHTML = `
         <tr>
-            <td colspan="4" class="error-message">
-                <div class="error-icon">âš ï¸</div>
+            <td colspan="5" class="error-message">
+                <div class="error-icon">⚠️</div>
                 <div>Failed to load data</div>
                 <div style="font-size: 0.75rem; margin-top: 8px;">${escapeHtml(message)}</div>
                 <div style="font-size: 0.7rem; margin-top: 4px; color: #718096;">
@@ -268,6 +321,7 @@ setInterval(updateLastUpdateTime, 60000);
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', init);
+
 // ====================================
 // Theme Toggle
 // ====================================
@@ -276,16 +330,13 @@ function initTheme() {
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
 
-    // Get saved theme or detect system preference
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
 
-    // Apply theme
     document.documentElement.setAttribute('data-theme', currentTheme);
     updateThemeIcon(currentTheme);
 
-    // Theme toggle event
     themeToggle.addEventListener('click', () => {
         const theme = document.documentElement.getAttribute('data-theme');
         const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -297,7 +348,36 @@ function initTheme() {
 
 function updateThemeIcon(theme) {
     const themeIcon = document.getElementById('themeIcon');
-    themeIcon.textContent = theme === 'dark' ? '??' : '??';
+    themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
+// ====================================
+// Share Functions
+// ====================================
+
+function shareTwitter() {
+    const text = encodeURIComponent('Check out Market Bias Pro - Multi-timeframe Forex trend analysis dashboard!');
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+}
+
+function shareFacebook() {
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+}
+
+function shareWhatsApp() {
+    const text = encodeURIComponent('Check out Market Bias Pro - Multi-timeframe Forex trend analysis dashboard! ' + window.location.href);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('Link copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy link');
+    });
 }
 
 // ====================================
@@ -338,23 +418,20 @@ const Calculator = {
     },
 
     bindEvents() {
-        // Auto-calculate on change
         ['mn1', 'w1', 'd1'].forEach(key => {
             if (this.dom[key]) {
                 this.dom[key].addEventListener('change', () => this.calculate());
             }
         });
 
-        // Settings toggle
         if (this.dom.toggleBtn) {
             this.dom.toggleBtn.addEventListener('click', () => {
                 this.dom.settingsPanel.classList.toggle('hidden');
                 const isHidden = this.dom.settingsPanel.classList.contains('hidden');
-                this.dom.toggleBtn.textContent = isHidden ? 'âš™ï¸ Edit Rates' : 'âŒ Close';
+                this.dom.toggleBtn.textContent = isHidden ? '⚙️ Edit Rates' : '❌ Close';
             });
         }
 
-        // Save settings
         if (this.dom.saveBtn) {
             this.dom.saveBtn.addEventListener('click', () => this.saveSettings());
         }
@@ -377,34 +454,29 @@ const Calculator = {
     },
 
     determineGrade(mn1, w1, d1) {
-        // Normalize
         const m = mn1.toUpperCase();
         const w = w1.toUpperCase();
         const d = d1.toUpperCase();
 
-        // Grade A+ Logic
         if ((m === 'STRONG BULL' && w === 'STRONG BULL' && d === 'BULL') ||
             (m === 'STRONG BEAR' && w === 'STRONG BEAR' && d === 'BEAR')) {
             return 'A+';
         }
 
-        // Grade A Logic
         if ((m === 'STRONG BULL' && w === 'BULL' && d === 'BULL') ||
             (m === 'STRONG BEAR' && w === 'BEAR' && d === 'BEAR')) {
             return 'A';
         }
 
-        // Grade A- Logic
         if ((m === 'BULL' && w === 'STRONG BULL' && d === 'BULL') ||
             (m === 'BEAR' && w === 'STRONG BEAR' && d === 'BEAR')) {
             return 'A-';
         }
 
-        return 'B'; // Default/No Match
+        return 'B';
     },
 
     getWinRate(grade) {
-        // Try localStorage first
         const savedRates = this.getStoredRates();
         return savedRates[grade] || this.defaults[grade] || 0;
     },
@@ -421,8 +493,7 @@ const Calculator = {
         this.dom.grade.textContent = grade;
         this.dom.winRate.textContent = winRate;
 
-        // Color coding
-        this.dom.grade.className = 'grade-badge'; // reset
+        this.dom.grade.className = 'grade-badge';
         if (grade.startsWith('A')) this.dom.grade.classList.add('grade-a');
         else if (grade === 'B') this.dom.grade.classList.add('grade-b');
     },
@@ -430,7 +501,6 @@ const Calculator = {
     loadSettings() {
         const rates = { ...this.defaults, ...this.getStoredRates() };
 
-        // Populate inputs
         for (const [grade, value] of Object.entries(rates)) {
             if (this.dom.inputs[grade]) {
                 this.dom.inputs[grade].value = value;
@@ -448,22 +518,18 @@ const Calculator = {
 
         localStorage.setItem('calcWinRates', JSON.stringify(newRates));
 
-        // Visual feedback
         const originalText = this.dom.saveBtn.textContent;
-        this.dom.saveBtn.textContent = 'âœ… Saved!';
+        this.dom.saveBtn.textContent = '✅ Saved!';
         setTimeout(() => {
             this.dom.saveBtn.textContent = originalText;
             this.dom.settingsPanel.classList.add('hidden');
-            this.dom.toggleBtn.textContent = 'âš™ï¸ Edit Rates';
+            this.dom.toggleBtn.textContent = '⚙️ Edit Rates';
         }, 1000);
 
-        // Recalculate to show new values immediately
         this.calculate();
     }
 };
 
-// Initialize Calculator when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     Calculator.init();
 });
-
