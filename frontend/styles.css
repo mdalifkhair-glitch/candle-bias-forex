@@ -113,7 +113,6 @@ body {
 /* App Layout */
 .app-layout {
     max-width: 1400px;
-    /* Wider for sidebar */
     margin: 0 auto;
     padding: var(--spacing-md);
     min-height: 100vh;
@@ -133,7 +132,6 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    /* Prevent overflow in flex item */
 }
 
 /* Calculator Card */
@@ -463,24 +461,18 @@ body {
 }
 
 @keyframes pulse-glow {
-
-    0%,
-    100% {
+    0%, 100% {
         box-shadow: 0 0 8px var(--strong-bull), 0 0 16px rgba(0, 255, 127, 0.3);
     }
-
     50% {
         box-shadow: 0 0 12px var(--strong-bull), 0 0 24px rgba(0, 255, 127, 0.5);
     }
 }
 
 @keyframes pulse {
-
-    0%,
-    100% {
+    0%, 100% {
         opacity: 1;
     }
-
     50% {
         opacity: 0.5;
     }
@@ -501,6 +493,8 @@ body {
 }
 
 .table-container {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
@@ -508,6 +502,7 @@ body {
 .bias-table {
     width: 100%;
     border-collapse: collapse;
+    border-spacing: 0;
     font-size: 0.9rem;
 }
 
@@ -519,7 +514,7 @@ body {
 }
 
 .bias-table th {
-    padding: var(--spacing-md);
+    padding: 12px 6px;
     text-align: left;
     font-weight: 600;
     color: var(--gold);
@@ -527,6 +522,14 @@ body {
     letter-spacing: 1px;
     font-size: 0.75rem;
     text-transform: uppercase;
+}
+
+/* Status column header - more compact */
+.bias-table th:last-child {
+    width: 80px;
+    min-width: 80px;
+    padding: 8px 4px;
+    text-align: center;
 }
 
 .bias-table th.col-symbol {
@@ -575,7 +578,7 @@ body {
 }
 
 .bias-table td {
-    padding: var(--spacing-md);
+    padding: 10px 6px;
 }
 
 .bias-table td.symbol-cell {
@@ -587,9 +590,13 @@ body {
 
 .bias-table td.bias-cell {
     text-align: center;
+    padding: 8px 2px;
 }
 
-/* Bias Badges */
+/* ====================================
+   IMPROVED BADGES - Equal Width + Compact Status
+   ==================================== */
+
 .badge {
     display: inline-block;
     padding: 4px 10px;
@@ -600,8 +607,30 @@ body {
     text-transform: uppercase;
     font-family: 'Space Mono', monospace;
     white-space: nowrap;
+    text-align: center;
 }
 
+/* Standard bias badges - equal width */
+.badge.strong-bull,
+.badge.bull,
+.badge.neutral,
+.badge.bear,
+.badge.strong-bear {
+    min-width: 110px;
+    width: 110px;
+}
+
+/* Status badges - MORE COMPACT */
+.badge.signal-buy,
+.badge.signal-sell,
+.badge.signal-wait {
+    min-width: 70px !important;
+    width: 70px !important;
+    padding: 4px 6px !important;
+    font-size: 0.7rem !important;
+}
+
+/* Color Styles */
 .badge.strong-bull {
     background: rgba(0, 255, 127, 0.15);
     color: var(--strong-bull);
@@ -634,20 +663,20 @@ body {
     text-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
 }
 
-.signal-wait {
+.badge.signal-wait {
     background: rgba(107, 114, 128, 0.15);
     color: var(--neutral);
     border: 1px solid rgba(107, 114, 128, 0.3);
 }
 
-.signal-buy {
+.badge.signal-buy {
     background: rgba(0, 255, 127, 0.15);
     color: var(--strong-bull);
     border: 1px solid rgba(0, 255, 127, 0.3);
     box-shadow: 0 0 10px rgba(0, 255, 127, 0.2);
 }
 
-.signal-sell {
+.badge.signal-sell {
     background: rgba(255, 59, 48, 0.15);
     color: var(--strong-bear);
     border: 1px solid rgba(255, 59, 48, 0.3);
@@ -668,9 +697,25 @@ body {
     border-top-color: var(--gold);
 }
 
+.error-message {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--strong-bear);
+}
+
 .error-message .error-icon {
     font-size: 2rem;
     margin-bottom: var(--spacing-sm);
+}
+
+/* ====================================
+   HIDE BIAS LEGEND
+   ==================================== */
+
+.legend-section,
+.bias-legend,
+.footer-section.legend-section {
+    display: none !important;
 }
 
 /* Consolidated Footer */
@@ -699,25 +744,9 @@ body {
     text-align: center;
 }
 
-/* Legend Grid */
+/* Legend Grid - HIDDEN but keeping structure */
 .legend-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: var(--spacing-md);
-    justify-items: center;
-}
-
-.legend-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xs);
-}
-
-.legend-desc {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    text-align: center;
+    display: none;
 }
 
 /* Footer Actions (Share & Support) */
@@ -801,14 +830,10 @@ body {
     color: var(--bg-primary);
 }
 
-/* Error State */
-.error-message {
-    text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--strong-bear);
-}
+/* ====================================
+   RESPONSIVE DESIGN - Mobile Optimization
+   ==================================== */
 
-/* Responsive Design */
 @media (max-width: 900px) {
     .app-layout {
         flex-direction: column;
@@ -821,6 +846,51 @@ body {
 
     .calculator-card {
         position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile table compact */
+    .bias-table th:last-child {
+        width: 65px;
+        min-width: 65px;
+        font-size: 0.65rem;
+    }
+    
+    /* Status badges - smallest */
+    .badge.signal-buy,
+    .badge.signal-sell,
+    .badge.signal-wait {
+        min-width: 60px !important;
+        width: 60px !important;
+        padding: 3px 4px !important;
+        font-size: 0.6rem !important;
+    }
+    
+    /* Other badges on mobile */
+    .badge.strong-bull,
+    .badge.bull,
+    .badge.neutral,
+    .badge.bear,
+    .badge.strong-bear {
+        min-width: 85px;
+        width: 85px;
+        padding: 4px 8px;
+        font-size: 0.65rem;
+    }
+    
+    /* Symbol column - compact */
+    .bias-table td.symbol-cell {
+        min-width: 65px;
+        padding: 8px 4px;
+    }
+    
+    .bias-table td {
+        padding: 8px 3px;
+    }
+    
+    .bias-table th {
+        padding: 10px 3px;
     }
 }
 
@@ -846,23 +916,36 @@ body {
         font-size: 1.4rem;
     }
 
-    .bias-table th,
-    .bias-table td {
-        padding: var(--spacing-sm);
-    }
-
-    .badge {
-        font-size: 0.6rem;
-        padding: 3px 6px;
-    }
-
     .footer-actions {
         grid-template-columns: 1fr;
         gap: var(--spacing-lg);
     }
+}
 
-    .legend-grid {
-        grid-template-columns: repeat(2, 1fr);
+@media (max-width: 480px) {
+    /* Extra small phones - ultra compact */
+    .bias-table th:last-child {
+        width: 55px;
+        min-width: 55px;
+    }
+    
+    .badge.signal-buy,
+    .badge.signal-sell,
+    .badge.signal-wait {
+        min-width: 50px !important;
+        width: 50px !important;
+        padding: 2px 3px !important;
+        font-size: 0.55rem !important;
+    }
+    
+    .badge.strong-bull,
+    .badge.bull,
+    .badge.neutral,
+    .badge.bear,
+    .badge.strong-bear {
+        min-width: 75px;
+        width: 75px;
+        font-size: 0.6rem;
     }
 }
 

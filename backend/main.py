@@ -118,11 +118,16 @@ async def get_all_bias():
     """
     Get bias for all symbols across all timeframes.
     Returns a list of bias data for the dashboard.
+    Fetches data in parallel to prevent timeouts.
     """
+    import asyncio
+    import concurrent.futures
+    
     symbols = data_fetcher.get_all_symbols()
     results = []
     
-    for symbol in symbols:
+    # Helper function to process a single symbol (runs in thread)
+    def process_symbol(symbol):
         bias_data = {
             "symbol": symbol,
             "daily": "NEUTRAL",
@@ -130,15 +135,15 @@ async def get_all_bias():
             "monthly": "NEUTRAL",
         }
         
-        # Try to fetch data, but don't block if it fails
+        # Try to fetch data
         for timeframe in ["daily", "weekly", "monthly"]:
             try:
+                # This is blocking, so we run it in a thread
                 candles = data_fetcher.get_timeframe_candles(symbol, timeframe)
                 if candles and len(candles) >= 2:
                     bias_data[timeframe] = get_bias_from_candles(candles)
             except Exception as e:
                 print(f"Error fetching {symbol} {timeframe}: {e}")
-                # Keep NEUTRAL as default
         
         # Calculate Signal
         bias_data["signal"] = calculate_trade_signal(
@@ -146,8 +151,21 @@ async def get_all_bias():
             bias_data["weekly"], 
             bias_data["monthly"]
         )
+        return bias_data
+
+    # Use ThreadPoolExecutor to run sync network calls in parallel
+    # Limit workers to avoid hitting Yahoo Finance rate limits too hard
+    # 10 workers = ~10 concurrent requests
+    loop = asyncio.get_event_loop()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        # Create a list of coroutines
+        futures = [
+            loop.run_in_executor(executor, process_symbol, symbol) 
+            for symbol in symbols
+        ]
         
-        results.append(bias_data)
+        # Wait for all to complete
+        results = await asyncio.gather(*futures)
     
     return {"data": results, "count": len(results)}
 

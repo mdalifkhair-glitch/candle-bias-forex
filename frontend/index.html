@@ -16,118 +16,210 @@
 </head>
 
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="/static/logo.png" alt="Market Bias Pro" class="logo-img">
-                    <h1>MARKET BIAS PRO</h1>
+    <div class="app-layout">
+        <!-- Sidebar (Win % Calculator) -->
+        <aside class="sidebar">
+            <div class="calculator-card">
+                <div class="card-header">
+                    <h2>🎯 Win % Cal</h2>
                 </div>
-                <div class="header-actions">
-                    <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
-                        <span id="themeIcon">🌙</span>
-                    </button>
-                    <span class="last-update" id="lastUpdate">--</span>
-                    <button class="refresh-btn" id="refreshBtn" title="Refresh Data">
-                        <span class="refresh-icon">↻</span>
-                    </button>
+
+                <div class="calc-form">
+                    <!-- MN1 Input -->
+                    <div class="form-group">
+                        <label>MN1 Bias</label>
+                        <select id="calcMn1" class="calc-select">
+                            <option value="">Select...</option>
+                            <option value="STRONG BULL">Strong Bull</option>
+                            <option value="BULL">Bull</option>
+                            <option value="NEUTRAL">Neutral</option>
+                            <option value="BEAR">Bear</option>
+                            <option value="STRONG BEAR">Strong Bear</option>
+                        </select>
+                    </div>
+
+                    <!-- W1 Input -->
+                    <div class="form-group">
+                        <label>W1 Bias</label>
+                        <select id="calcW1" class="calc-select">
+                            <option value="">Select...</option>
+                            <option value="STRONG BULL">Strong Bull</option>
+                            <option value="BULL">Bull</option>
+                            <option value="NEUTRAL">Neutral</option>
+                            <option value="BEAR">Bear</option>
+                            <option value="STRONG BEAR">Strong Bear</option>
+                        </select>
+                    </div>
+
+                    <!-- D1 Input -->
+                    <div class="form-group">
+                        <label>D1 Bias</label>
+                        <select id="calcD1" class="calc-select">
+                            <option value="">Select...</option>
+                            <option value="STRONG BULL">Strong Bull</option>
+                            <option value="BULL">Bull</option>
+                            <option value="NEUTRAL">Neutral</option>
+                            <option value="BEAR">Bear</option>
+                            <option value="STRONG BEAR">Strong Bear</option>
+                        </select>
+                    </div>
+
+                    <div class="calc-divider"></div>
+
+                    <!-- Results -->
+                    <div class="calc-result">
+                        <div class="result-row">
+                            <span>Grade</span>
+                            <span id="calcGrade" class="grade-badge">--</span>
+                        </div>
+                        <div class="result-row">
+                            <span>Win Rate</span>
+                            <span id="calcWinRate" class="win-rate">--%</span>
+                        </div>
+                    </div>
+
+                    <!-- Edit Toggle -->
+                    <button id="toggleSettingsBtn" class="settings-btn">⚙️ Edit Rates</button>
+
+                    <!-- Hidden Settings -->
+                    <div id="calcSettings" class="calc-settings hidden">
+                        <h3>Set Win Rates</h3>
+                        <div class="setting-row">
+                            <label>A+</label>
+                            <input type="number" id="rateAPlus" value="90">
+                        </div>
+                        <div class="setting-row">
+                            <label>A</label>
+                            <input type="number" id="rateA" value="80">
+                        </div>
+                        <div class="setting-row">
+                            <label>A-</label>
+                            <input type="number" id="rateAMinus" value="70">
+                        </div>
+                        <div class="setting-row">
+                            <label>B</label>
+                            <input type="number" id="rateB" value="50">
+                        </div>
+                        <button id="saveRatesBtn" class="save-btn">Save</button>
+                    </div>
                 </div>
             </div>
-        </header>
+        </aside>
 
-        <!-- Status Bar -->
-        <div class="status-bar">
-            <div class="status-item">
-                <span class="status-dot online" id="statusDot"></span>
-                <span id="statusText">Connecting...</span>
-            </div>
-            <div class="status-item">
-                <span style="font-size: 0.8rem; opacity: 0.7; margin-right: 1rem;">Data Source: Yahoo Finance</span>
-                <span class="pairs-count" id="pairsCount">0 pairs</span>
-            </div>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <div class="logo">
+                        <img src="/static/logo.png" alt="Market Bias Pro" class="logo-img">
+                        <h1>MARKET BIAS PRO</h1>
+                    </div>
+                    <div class="header-actions">
+                        <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+                            <span id="themeIcon">🌙</span>
+                        </button>
+                        <span class="last-update" id="lastUpdate">--</span>
+                        <button class="refresh-btn" id="refreshBtn" title="Refresh Data">
+                            <span class="refresh-icon">↻</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
 
-        <!-- Dashboard Table -->
-        <main class="dashboard">
-            <div class="table-container">
-                <table class="bias-table">
-                    <thead>
-                        <tr>
-                            <th class="col-symbol">SYMBOL</th>
-                            <th class="col-bias">DAILY</th>
-                            <th class="col-bias">WEEKLY</th>
-                            <th class="col-bias">MONTHLY</th>
-                            <th class="col-status">STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="biasTableBody">
-                        <tr class="loading-row">
-                            <td colspan="4">
-                                <div class="loading-spinner"></div>
-                                <span>Loading data...</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+                <div class="status-item">
+                    <span style="font-size: 0.8rem; opacity: 0.7; margin-right: 1rem;">Data Source: Yahoo Finance</span>
+                    <span class="pairs-count" id="pairsCount">0 pairs</span>
+                </div>
             </div>
+
+            <!-- Dashboard Table -->
+            <div class="dashboard">
+                <div class="table-container">
+                    <table class="bias-table">
+                        <thead>
+                            <tr>
+                                <th class="col-symbol">SYMBOL</th>
+                                <th class="col-bias">DAILY</th>
+                                <th class="col-bias">WEEKLY</th>
+                                <th class="col-bias">MONTHLY</th>
+                                <th class="col-status">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="biasTableBody">
+                            <tr class="loading-row">
+                                <td colspan="4">
+                                    <div class="loading-spinner"></div>
+                                    <span>Loading data...</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Consolidated Footer -->
+            <footer class="footer">
+                <!-- Bias Legend -->
+                <div class="footer-section legend-section">
+                    <h3>📊 Bias Legend</h3>
+                    <div class="legend-grid">
+                        <div class="legend-item">
+                            <span class="badge strong-bull">STRONG BULL</span>
+                            <span class="legend-desc">High Momentum Up</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="badge bull">BULL</span>
+                            <span class="legend-desc">Momentum Up</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="badge neutral">NEUTRAL</span>
+                            <span class="legend-desc">Consolidation</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="badge bear">BEAR</span>
+                            <span class="legend-desc">Momentum Down</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="badge strong-bear">STRONG BEAR</span>
+                            <span class="legend-desc">High Momentum Down</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Share & Support -->
+                <div class="footer-actions">
+                    <div class="footer-section">
+                        <h3>🔗 Share</h3>
+                        <div class="action-buttons">
+                            <button onclick="shareTwitter()" class="action-btn twitter">🐦</button>
+                            <button onclick="shareFacebook()" class="action-btn facebook">📘</button>
+                            <button onclick="shareWhatsApp()" class="action-btn whatsapp">💬</button>
+                            <button onclick="copyLink()" class="action-btn copy">🔗</button>
+                        </div>
+                    </div>
+
+                    <div class="footer-section">
+                        <h3>💝 Support</h3>
+                        <div class="action-buttons">
+                            <a href="#" id="buyMeCoffeeLink" target="_blank" class="action-btn coffee"
+                                title="Buy Me a Coffee">☕</a>
+                            <a href="#" id="paypalLink" target="_blank" class="action-btn paypal" title="PayPal">💳</a>
+                            <a href="#" id="toyyibpayLink" target="_blank" class="action-btn toyyibpay"
+                                title="toyyibpay">💰</a>
+                            <a href="mailto:your@email.com?subject=Candle%20Bias%20Feedback" id="feedbackLink"
+                                class="action-btn feedback" title="Send Feedback">📧</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </main>
-
-        <!-- Consolidated Footer -->
-        <footer class="footer">
-            <!-- Bias Legend -->
-            <div class="footer-section legend-section">
-                <h3>📊 Bias Legend</h3>
-                <div class="legend-grid">
-                    <div class="legend-item">
-                        <span class="badge strong-bull">STRONG BULL</span>
-                        <span class="legend-desc">High Momentum Up</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="badge bull">BULL</span>
-                        <span class="legend-desc">Momentum Up</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="badge neutral">NEUTRAL</span>
-                        <span class="legend-desc">Consolidation</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="badge bear">BEAR</span>
-                        <span class="legend-desc">Momentum Down</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="badge strong-bear">STRONG BEAR</span>
-                        <span class="legend-desc">High Momentum Down</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Share & Support -->
-            <div class="footer-actions">
-                <div class="footer-section">
-                    <h3>🔗 Share</h3>
-                    <div class="action-buttons">
-                        <button onclick="shareTwitter()" class="action-btn twitter">🐦</button>
-                        <button onclick="shareFacebook()" class="action-btn facebook">📘</button>
-                        <button onclick="shareWhatsApp()" class="action-btn whatsapp">💬</button>
-                        <button onclick="copyLink()" class="action-btn copy">🔗</button>
-                    </div>
-                </div>
-
-                <div class="footer-section">
-                    <h3>💝 Support</h3>
-                    <div class="action-buttons">
-                        <a href="#" id="buyMeCoffeeLink" target="_blank" class="action-btn coffee"
-                            title="Buy Me a Coffee">☕</a>
-                        <a href="#" id="paypalLink" target="_blank" class="action-btn paypal" title="PayPal">💳</a>
-                        <a href="#" id="toyyibpayLink" target="_blank" class="action-btn toyyibpay"
-                            title="toyyibpay">💰</a>
-                        <a href="mailto:your@email.com?subject=Candle%20Bias%20Feedback" id="feedbackLink"
-                            class="action-btn feedback" title="Send Feedback">📧</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
     </div>
 
     <script src="/static/app.js"></script>

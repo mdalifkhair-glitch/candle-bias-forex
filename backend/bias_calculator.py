@@ -81,13 +81,13 @@ def calculate_trade_signal(daily: str, weekly: str, monthly: str) -> str:
     """
     
     # Check BUY
-    if monthly == "STRONG BULL":
+    if monthly in ["STRONG BULL", "BULL"]:
         if weekly in ["STRONG BULL", "BULL"]:
             if daily in ["STRONG BULL", "BULL"]:
                 return "BUY"
                 
     # Check SELL
-    if monthly == "STRONG BEAR":
+    if monthly in ["STRONG BEAR", "BEAR"]:
         if weekly in ["STRONG BEAR", "BEAR"]:
             if daily in ["STRONG BEAR", "BEAR"]:
                 return "SELL"
