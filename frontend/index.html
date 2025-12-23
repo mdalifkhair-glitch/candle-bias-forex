@@ -1,228 +1,249 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Market Bias Pro - Multi-timeframe Forex trend analysis dashboard">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Market Bias Pro | Forex Dashboard</title>
-    <link rel="icon" type="image/png" href="/static/logo.png">
+    <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
-    <div class="app-layout">
-        <!-- Sidebar (Win % Calculator) -->
-        <aside class="sidebar">
-            <div class="calculator-card">
-                <div class="card-header">
-                    <h2>🎯 Win % Cal</h2>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <img src="/static/logo.png" alt="Market Bias Pro" class="logo-img" onerror="this.style.display='none'">
+                <h1>MARKET BIAS PRO</h1>
+            </div>
+            <div class="header-actions">
+                <div class="last-update">
+                    Last update: <span id="lastUpdate">--</span>
                 </div>
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                <button id="refreshBtn" class="refresh-btn" aria-label="Refresh data">
+                    <span class="refresh-icon">↻</span>
+                </button>
+            </div>
+        </div>
+    </header>
 
-                <div class="calc-form">
-                    <!-- MN1 Input -->
-                    <div class="form-group">
-                        <label>MN1 Bias</label>
-                        <select id="calcMn1" class="calc-select">
-                            <option value="">Select...</option>
-                            <option value="STRONG BULL">Strong Bull</option>
-                            <option value="BULL">Bull</option>
-                            <option value="NEUTRAL">Neutral</option>
-                            <option value="BEAR">Bear</option>
-                            <option value="STRONG BEAR">Strong Bear</option>
-                        </select>
-                    </div>
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Connecting...</span>
+        </div>
+        <div class="status-item">
+            Data Source: Yahoo Finance
+        </div>
+        <div class="status-item">
+            <span id="pairsCount">0 pairs</span>
+        </div>
+    </div>
 
-                    <!-- W1 Input -->
-                    <div class="form-group">
-                        <label>W1 Bias</label>
-                        <select id="calcW1" class="calc-select">
-                            <option value="">Select...</option>
-                            <option value="STRONG BULL">Strong Bull</option>
-                            <option value="BULL">Bull</option>
-                            <option value="NEUTRAL">Neutral</option>
-                            <option value="BEAR">Bear</option>
-                            <option value="STRONG BEAR">Strong Bear</option>
-                        </select>
-                    </div>
+    <!-- Main App Container -->
+    <div class="app-container">
+        <!-- LEFT GROUP (Sidebar) -->
+        <aside class="left-group">
+            <!-- Market Types Box -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🌐</span>
+                    <h2 class="card-title">Market Types</h2>
+                </div>
+                
+                <div class="market-grid">
+                    <button class="market-btn active" data-market="forex">
+                        <div class="market-btn-icon">💱</div>
+                        <div class="market-btn-label">Forex</div>
+                    </button>
+                    
+                    <button class="market-btn" data-market="crypto">
+                        <div class="market-btn-icon">₿</div>
+                        <div class="market-btn-label">Crypto</div>
+                    </button>
+                    
+                    <button class="market-btn" data-market="stocks">
+                        <div class="market-btn-icon">📈</div>
+                        <div class="market-btn-label">Stocks</div>
+                    </button>
+                    
+                    <button class="market-btn" data-market="commodities">
+                        <div class="market-btn-icon">🛢️</div>
+                        <div class="market-btn-label">Commodities</div>
+                    </button>
+                </div>
+            </div>
 
-                    <!-- D1 Input -->
-                    <div class="form-group">
-                        <label>D1 Bias</label>
-                        <select id="calcD1" class="calc-select">
-                            <option value="">Select...</option>
-                            <option value="STRONG BULL">Strong Bull</option>
-                            <option value="BULL">Bull</option>
-                            <option value="NEUTRAL">Neutral</option>
-                            <option value="BEAR">Bear</option>
-                            <option value="STRONG BEAR">Strong Bear</option>
-                        </select>
-                    </div>
-
-                    <div class="calc-divider"></div>
-
-                    <!-- Results -->
-                    <div class="calc-result">
-                        <div class="result-row">
-                            <span>Grade</span>
-                            <span id="calcGrade" class="grade-badge">--</span>
+            <!-- Trading Styles Box -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">⏱️</span>
+                    <h2 class="card-title">Trading Styles</h2>
+                </div>
+                
+                <div class="style-grid">
+                    <button class="style-btn active" data-style="position" data-tf1="monthly" data-tf2="weekly" data-tf3="daily">
+                        <span class="style-btn-icon">🎯</span>
+                        <div class="style-btn-content">
+                            <div class="style-btn-name">Position Trading</div>
+                            <div class="style-btn-tf">MN-W1-D1</div>
                         </div>
-                        <div class="result-row">
-                            <span>Win Rate</span>
-                            <span id="calcWinRate" class="win-rate">--%</span>
+                    </button>
+                    
+                    <button class="style-btn" data-style="swing" data-tf1="weekly" data-tf2="daily" data-tf3="h4">
+                        <span class="style-btn-icon">🔄</span>
+                        <div class="style-btn-content">
+                            <div class="style-btn-name">Swing Trading</div>
+                            <div class="style-btn-tf">W1-D1-H4</div>
                         </div>
-                    </div>
-
-                    <!-- Edit Toggle -->
-                    <button id="toggleSettingsBtn" class="settings-btn">⚙️ Edit Rates</button>
-
-                    <!-- Hidden Settings -->
-                    <div id="calcSettings" class="calc-settings hidden">
-                        <h3>Set Win Rates</h3>
-                        <div class="setting-row">
-                            <label>A+</label>
-                            <input type="number" id="rateAPlus" value="90">
+                    </button>
+                    
+                    <button class="style-btn" data-style="intraday" data-tf1="daily" data-tf2="h4" data-tf3="h1">
+                        <span class="style-btn-icon">⚡</span>
+                        <div class="style-btn-content">
+                            <div class="style-btn-name">Intraday</div>
+                            <div class="style-btn-tf">D1-H4-H1</div>
                         </div>
-                        <div class="setting-row">
-                            <label>A</label>
-                            <input type="number" id="rateA" value="80">
+                    </button>
+                    
+                    <button class="style-btn" data-style="scalp" data-tf1="h4" data-tf2="h1" data-tf3="m15">
+                        <span class="style-btn-icon">💨</span>
+                        <div class="style-btn-content">
+                            <div class="style-btn-name">Scalping</div>
+                            <div class="style-btn-tf">H4-H1-M15</div>
                         </div>
-                        <div class="setting-row">
-                            <label>A-</label>
-                            <input type="number" id="rateAMinus" value="70">
-                        </div>
-                        <div class="setting-row">
-                            <label>B</label>
-                            <input type="number" id="rateB" value="50">
-                        </div>
-                        <button id="saveRatesBtn" class="save-btn">Save</button>
-                    </div>
+                    </button>
                 </div>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Header -->
-            <header class="header">
-                <div class="header-content">
-                    <div class="logo">
-                        <img src="/static/logo.png" alt="Market Bias Pro" class="logo-img">
-                        <h1>MARKET BIAS PRO</h1>
+        <!-- RIGHT GROUP (Signal Tables) -->
+        <main class="right-group">
+            <!-- BUY SIGNALS -->
+            <section class="signal-section buy">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <div class="section-title buy-title">
+                        <span class="icon">🟢</span>
+                        <span>BUY SIGNALS</span>
+                        <span class="count-badge" id="buyCount">0 pairs</span>
                     </div>
-                    <div class="header-actions">
-                        <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
-                            <span id="themeIcon">🌙</span>
-                        </button>
-                        <span class="last-update" id="lastUpdate">--</span>
-                        <button class="refresh-btn" id="refreshBtn" title="Refresh Data">
-                            <span class="refresh-icon">↻</span>
-                        </button>
-                    </div>
+                    <span class="collapse-icon">▼</span>
                 </div>
-            </header>
-
-            <!-- Status Bar -->
-            <div class="status-bar">
-                <div class="status-item">
-                    <span class="status-dot online" id="statusDot"></span>
-                    <span id="statusText">Connecting...</span>
-                </div>
-                <div class="status-item">
-                    <span style="font-size: 0.8rem; opacity: 0.7; margin-right: 1rem;">Data Source: Yahoo Finance</span>
-                    <span class="pairs-count" id="pairsCount">0 pairs</span>
-                </div>
-            </div>
-
-            <!-- Dashboard Table -->
-            <div class="dashboard">
-                <div class="table-container">
-                    <table class="bias-table">
-                        <thead>
-                            <tr>
-                                <th class="col-symbol">SYMBOL</th>
-                                <th class="col-bias">DAILY</th>
-                                <th class="col-bias">WEEKLY</th>
-                                <th class="col-bias">MONTHLY</th>
-                                <th class="col-status">STATUS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="biasTableBody">
-                            <tr class="loading-row">
-                                <td colspan="4">
-                                    <div class="loading-spinner"></div>
-                                    <span>Loading data...</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Consolidated Footer -->
-            <footer class="footer">
-                <!-- Bias Legend -->
-                <div class="footer-section legend-section">
-                    <h3>📊 Bias Legend</h3>
-                    <div class="legend-grid">
-                        <div class="legend-item">
-                            <span class="badge strong-bull">STRONG BULL</span>
-                            <span class="legend-desc">High Momentum Up</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="badge bull">BULL</span>
-                            <span class="legend-desc">Momentum Up</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="badge neutral">NEUTRAL</span>
-                            <span class="legend-desc">Consolidation</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="badge bear">BEAR</span>
-                            <span class="legend-desc">Momentum Down</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="badge strong-bear">STRONG BEAR</span>
-                            <span class="legend-desc">High Momentum Down</span>
-                        </div>
+                <div class="section-content">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>SYMBOL</th>
+                                    <th id="buyHeader1">MONTHLY</th>
+                                    <th id="buyHeader2">WEEKLY</th>
+                                    <th id="buyHeader3">DAILY</th>
+                                </tr>
+                            </thead>
+                            <tbody id="buyTableBody">
+                                <tr>
+                                    <td colspan="4" class="empty-state">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+            </section>
 
-                <!-- Share & Support -->
-                <div class="footer-actions">
-                    <div class="footer-section">
-                        <h3>🔗 Share</h3>
-                        <div class="action-buttons">
-                            <button onclick="shareTwitter()" class="action-btn twitter">🐦</button>
-                            <button onclick="shareFacebook()" class="action-btn facebook">📘</button>
-                            <button onclick="shareWhatsApp()" class="action-btn whatsapp">💬</button>
-                            <button onclick="copyLink()" class="action-btn copy">🔗</button>
-                        </div>
+            <!-- SELL SIGNALS -->
+            <section class="signal-section sell">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <div class="section-title sell-title">
+                        <span class="icon">🔴</span>
+                        <span>SELL SIGNALS</span>
+                        <span class="count-badge" id="sellCount">0 pairs</span>
                     </div>
-
-                    <div class="footer-section">
-                        <h3>💝 Support</h3>
-                        <div class="action-buttons">
-                            <a href="#" id="buyMeCoffeeLink" target="_blank" class="action-btn coffee"
-                                title="Buy Me a Coffee">☕</a>
-                            <a href="#" id="paypalLink" target="_blank" class="action-btn paypal" title="PayPal">💳</a>
-                            <a href="#" id="toyyibpayLink" target="_blank" class="action-btn toyyibpay"
-                                title="toyyibpay">💰</a>
-                            <a href="mailto:your@email.com?subject=Candle%20Bias%20Feedback" id="feedbackLink"
-                                class="action-btn feedback" title="Send Feedback">📧</a>
-                        </div>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="section-content">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>SYMBOL</th>
+                                    <th id="sellHeader1">MONTHLY</th>
+                                    <th id="sellHeader2">WEEKLY</th>
+                                    <th id="sellHeader3">DAILY</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sellTableBody">
+                                <tr>
+                                    <td colspan="4" class="empty-state">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </footer>
+            </section>
+
+            <!-- NO SIGNAL -->
+            <section class="signal-section no-signal">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <div class="section-title no-signal-title">
+                        <span class="icon">⚫</span>
+                        <span>NO SIGNAL</span>
+                        <span class="count-badge" id="noSignalCount">0 pairs</span>
+                    </div>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="section-content">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>SYMBOL</th>
+                                    <th id="noSignalHeader1">MONTHLY</th>
+                                    <th id="noSignalHeader2">WEEKLY</th>
+                                    <th id="noSignalHeader3">DAILY</th>
+                                </tr>
+                            </thead>
+                            <tbody id="noSignalTableBody">
+                                <tr>
+                                    <td colspan="4" class="empty-state">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
-    <script src="/static/app.js"></script>
-</body>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-actions">
+            <div class="footer-section">
+                <h3>🔗 Share</h3>
+                <div class="action-buttons">
+                    <button class="action-btn twitter" onclick="shareTwitter()" title="Share on Twitter">🐦</button>
+                    <button class="action-btn facebook" onclick="shareFacebook()" title="Share on Facebook">📘</button>
+                    <button class="action-btn whatsapp" onclick="shareWhatsApp()" title="Share on WhatsApp">💬</button>
+                    <button class="action-btn copy" onclick="copyLink()" title="Copy Link">🔗</button>
+                </div>
+            </div>
 
+            <div class="footer-section">
+                <h3>💝 Support</h3>
+                <div class="action-buttons">
+                    <a href="#" class="action-btn coffee" title="Buy Me a Coffee">☕</a>
+                    <a href="#" class="action-btn paypal" title="PayPal">💳</a>
+                    <a href="#" class="action-btn toyyibpay" title="toyyibpay">💰</a>
+                    <a href="mailto:your@email.com?subject=Candle%20Bias%20Feedback" class="action-btn feedback" title="Send Feedback">📧</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
 </html>
